@@ -101,11 +101,11 @@ bool CovidSpore::CheckScreenCollision(FRect screenBounds)
 	return false;
 }
 
-bool CovidSpore::CheckSporeCollision(CovidSpore & otherSpore)
+bool CovidSpore::CheckSporeCollision(CovidSpore* otherSpore)
 {
-	float minDist = this->centerOffset.x + otherSpore.GetCenterOffset().x;
+	float minDist = this->centerOffset.x + otherSpore->GetCenterOffset().x;
 
-	FPoint otherCenterPos = otherSpore.GetCenterPosition();
+	FPoint otherCenterPos = otherSpore->GetCenterPosition();
 	float dist = this->centerPosition.GetDistanceTo(otherCenterPos);
 
 	if (dist <= minDist)//spores are colliding
@@ -137,7 +137,7 @@ bool CovidSpore::CheckSporeCollision(CovidSpore & otherSpore)
 		}
 
 		bSuccess = false;
-		float otherSporeDirection = otherSpore.GetSporeDirection(bSuccess);
+		float otherSporeDirection = otherSpore->GetSporeDirection(bSuccess);
 
 		float otherReflectedAngle = Utilities::CalcReflectedAngle(otherSporeDirection, otherMirrorAngle);
 		Utilities::CorrectingAngle(otherReflectedAngle);
@@ -166,14 +166,14 @@ bool CovidSpore::CheckSporeCollision(CovidSpore & otherSpore)
 		RestartSplineAnimation();
 
 		//transforming other trajectorySpline to calculated point and angle and restarting spline animation
-		otherSpore.SetTrajectoryGlobalAngle(CalcReflectedSplineAngle(otherSporeDirection, otherMirrorAngle));		
+		otherSpore->SetTrajectoryGlobalAngle(CalcReflectedSplineAngle(otherSporeDirection, otherMirrorAngle));		
 
 		distPoint = FPoint(bounceDist, 0.f);
 		distPoint.Rotate(otherReflectedAngle / (180 / math::PI));
 
-		otherSpore.SetTrajectoryStart(otherSpore.GetCurrentPosition() + distPoint);
+		otherSpore->SetTrajectoryStart(otherSpore->GetCurrentPosition() + distPoint);
 
-		otherSpore.RestartSplineAnimation();
+		otherSpore->RestartSplineAnimation();
 
 		return true;
 	}

@@ -17,6 +17,8 @@ class Bullet
 	float trajectoryEndTime;
 	FRect screenBounds;
 
+	bool bStartsAbroad;
+
 	TimedSpline<float> speedSpline;
 
 	float speed;
@@ -86,4 +88,15 @@ private:
 	void CalculateCurrentPosition();
 
 	void RecalculateTrajectory();
+
+	float CalculateFlyLength(float startAngle, float startSpeed);
+
+	void ProcessTrajectoryVariables(bool & bStop, bool bContainsPoint, bool& bPointAbroad,
+		const int maxAbroadPoints, int& abroadPointsCount);
+
+	void CalculateParabolicTrajectory(float startAngle, float startSpeed, FPoint startPoint,
+		 bool& bPointAbroad, const int maxAbroadPoints, int& abroadPointsCount);
+
+	void CalculateVerticalTrajectory(float startAngle, float startSpeed, FPoint startPoint,
+		bool& bPointAbroad, const int maxAbroadPoints, int& abroadPointsCount);
 };

@@ -62,7 +62,7 @@ public:
 	bool CheckScreenCollision(FRect screenBounds);
 
 	//returns true if spores colliding
-	bool CheckSporeCollision(CovidSpore& otherSpore);
+	bool CheckSporeCollision(CovidSpore* otherSpore);
 
 private:
 

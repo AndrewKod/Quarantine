@@ -1,4 +1,5 @@
 #include "stdafx.h"
+#include "Globals.h"
 #include "QuarantineAppDelegate.h"
 #include "StartWidget.h"
 #include "SettingsWidget.h"

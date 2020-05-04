@@ -65,7 +65,7 @@ class GameWidget : public GUI::Widget
 	CovidMonster* covidMonster;
 	
 
-	std::vector<CovidSpore> covidSpores;
+	std::vector<CovidSpore*> covidSpores;
 	std::vector<SporeTemplate> covidSporeTemplates;
 	float sporeSpawnStartDelay;
 	float sporeSpawnGameDelay;

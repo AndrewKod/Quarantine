@@ -26,6 +26,8 @@ Bullet::Bullet(int bulletId, Render::Texture * bulletTex, ParticleEffectPtr trai
 	this->timer = 0.f;
 	this->deltaTime = 0.f;
 
+	this->bStartsAbroad = true;
+
 	this->bWantsDestroy = false;
 	
 	CalculateTrajectory(startAngle, this->speed, startPoint);
@@ -40,18 +42,23 @@ void Bullet::Draw()
 
 	if (!this->screenBounds.Contains(this->currentPosition))
 	{
-		RecalculateTrajectory();
+		if (!this->bStartsAbroad)
+		{
+			RecalculateTrajectory();
 
-		if (this->bWantsDestroy)
-			return;
+			if (this->bWantsDestroy)
+				return;
 
-		this->timer = 0.f;
-		this->deltaTime = 0.f;
-		this->CalculateCurrentPosition();
+			this->timer = 0.f;
+			this->deltaTime = 0.f;
+			this->CalculateCurrentPosition();
 
-		if (this->bWantsDestroy)
-			return;
+			if (this->bWantsDestroy)
+				return;
+		}			
 	}
+	else
+		this->bStartsAbroad = false;
 
 
 	//Draw bulletTex
@@ -84,109 +91,29 @@ void Bullet::Destroy()
 
 void Bullet::CalculateTrajectory(float startAngle, float startSpeed, FPoint startPoint)
 {
-	bool bPointAbroad = this->screenBounds.Contains(startPoint);
+	bool bPointAbroad = !this->screenBounds.Contains(startPoint);
+	if(this->bStartsAbroad)
+		this->bStartsAbroad = bPointAbroad;
 	const int maxAbroadPoints = 10;
+	int abroadPointsCount = 0;
 
 	this->trajectorySpline.Clear();	
 	this->speedSpline.Clear();
 	//Gravity Acceleration
 	const int g = 10;
 
-	if (startAngle != 90.f&&startAngle != 270.f)
+	if (startAngle != 90.f && startAngle != 270.f)
 	{
-		float startAngleRad = startAngle / (180 / math::PI);
-
-		float flyLength = 0.f;
-		float angleForCalcs = 0.f;
-		if (startAngle >= 0.f && startAngle < 90.f)
-		{
-			angleForCalcs = startAngle;
-		}
-		else if (startAngle > 90.f && startAngle <= 180.f)
-		{
-			angleForCalcs = 180.f - startAngle;
-		}
-		else if (startAngle > 180.f && startAngle < 270.f)
-		{
-			angleForCalcs = startAngle - 180.f;
-		}
-		else
-		{
-			angleForCalcs = 90.f - (startAngle - 270.f);
-		}
-
-
-		if (angleForCalcs >= 0 && angleForCalcs < 5)
-			flyLength = startSpeed;
-		else
-			flyLength = math::sqr(startSpeed)*math::sin(angleForCalcs / (180 / math::PI) * 2) / g;		
-
-		float time = 0.f;
-		float splineTime = 0.f;
-		float x = 0.f;
-		float y = 0.f;
-
-		float step = flyLength / 10;		
-
-		bool bPointsToRight = startAngle < 90.f || startAngle > 270.f;			
-			
-		FPoint splinePoint = startPoint;
-		float currSpeedX = startSpeed * math::cos(startAngleRad);
-		float currSpeedY = 0.f;
-
-		//int overCount = 0;
-
-		//Add keys to trajectorySpline until first point outside screenBounds 
-		do
-		{
-			time = x / startSpeed / math::cos(startAngleRad);
-			currSpeedY = startSpeed * math::sin(startAngleRad) - g * time;
-			FPoint vPoint(currSpeedX, currSpeedY);
-			float currSpeed = vPoint.GetDistanceToOrigin();			
-
-			splineTime = x / startSpeed / math::cos(startAngleRad) * this->timeMultiplyer;
-			y = CalculateY(x, startSpeed, startAngleRad);
-
-			splinePoint = FPoint(x, y);
-			splinePoint += startPoint/* + this->centerOffset*/;			
-
-			this->trajectoryEndTime = splineTime;
-			this->trajectorySpline.addKey(splineTime, splinePoint);
-			this->speedSpline.addKey(splineTime, currSpeed);
-			
-			bPointsToRight ? x += step : x -= step;
-
-			///////////////////////TESTS///////////////////////
-			/*if (!this->screenBounds.Contains(splinePoint))
-				overCount++;*/
-
-		} while (this->screenBounds.Contains(splinePoint)/*overCount < 20*/);
+		this->CalculateParabolicTrajectory(startAngle, startSpeed, startPoint, bPointAbroad, maxAbroadPoints, abroadPointsCount);
 	}
 	else//gun shooting either verticaly up or down
 	{
-		float time = 0.f;
-		float splineTime = 0.f;
-		float currSpeed = startSpeed;
-		FPoint splinePoint = startPoint;
-		float dist = 0.f;
-		bool bUpRight = startAngle == 90.f;
-				
-		do 
-		{
-			splinePoint.y = startPoint.y + dist * (bUpRight ? 1.f : -1.f);
-			
-			this->trajectoryEndTime = splineTime;
-			this->speedSpline.addKey(splineTime, math::abs(currSpeed));
-			this->trajectorySpline.addKey(splineTime, splinePoint);
-			
-			splineTime += (1.f * this->timeMultiplyer);
-			time += 1.f;
-			currSpeed = startSpeed + g * time * (bUpRight ? -1.f : 1.f);
-			dist = startSpeed * time + g * math::sqr(time) / 2 * (bUpRight ? -1.f : 1.f);
-			
-		} while (this->screenBounds.Contains(splinePoint));
+		this->CalculateVerticalTrajectory(startAngle, startSpeed, startPoint, bPointAbroad, maxAbroadPoints, abroadPointsCount);
 	}
-	this->trajectorySpline.CalculateGradient();
+	if (this->trajectorySpline.GetKeysCount() > 1)
+		this->trajectorySpline.CalculateGradient();
+	else
+		this->bWantsDestroy = true;
 }
 
 float Bullet::CalculateY(float x, float startSpeed, float startAngleRad)
@@ -204,7 +131,7 @@ void Bullet::CalculateCurrentPosition()
 	
 	this->drawPosition = this->currentPosition - this->centerOffset;
 
-	if (splineTime >= this->trajectoryEndTime)
+	if (splineTime >= this->trajectoryEndTime && this->bStartsAbroad)
 		this->bWantsDestroy = true;
 }
 
@@ -218,7 +145,6 @@ void Bullet::RecalculateTrajectory()
 	}
 	else
 	{
-
 		float mirrorAngle = 0.f;
 		float dafaultTrajectoryAngle = 0.f;
 		FPoint newTrajectoryStart(0.f, 0.f);
@@ -250,4 +176,136 @@ void Bullet::RecalculateTrajectory()
 			this->CalculateTrajectory(reflectedTrajectoryAngle, currSpeed, newTrajectoryStart);
 		}
 	}
+}
+
+float Bullet::CalculateFlyLength(float startAngle, float startSpeed)
+{	
+	const int g = 10;
+	float angleForCalcs = 0.f;
+	if (startAngle >= 0.f && startAngle < 90.f)
+	{
+		angleForCalcs = startAngle;
+	}
+	else if (startAngle > 90.f && startAngle <= 180.f)
+	{
+		angleForCalcs = 180.f - startAngle;
+	}
+	else if (startAngle > 180.f && startAngle < 270.f)
+	{
+		angleForCalcs = startAngle - 180.f;
+	}
+	else
+	{
+		angleForCalcs = 90.f - (startAngle - 270.f);
+	}
+
+
+	if (angleForCalcs >= 0 && angleForCalcs < 5)
+		return startSpeed;
+	else
+		return math::sqr(startSpeed)*math::sin(angleForCalcs / (180 / math::PI) * 2) / g;
+}
+
+void Bullet::ProcessTrajectoryVariables(bool & bStop, bool bContainsPoint, bool& bPointAbroad,
+	const int maxAbroadPoints, int& abroadPointsCount)
+{
+	if (!bContainsPoint && bPointAbroad)
+	{
+		abroadPointsCount++;
+		if (abroadPointsCount >= maxAbroadPoints)
+			bStop = true;
+	}
+	else if (bContainsPoint && bPointAbroad)
+	{
+		bPointAbroad = false;
+	}
+	else if (!bContainsPoint && !bPointAbroad)
+	{
+		bStop = true;
+	}
+}
+
+void Bullet::CalculateParabolicTrajectory(float startAngle, float startSpeed, FPoint startPoint,
+	bool& bPointAbroad, const int maxAbroadPoints, int& abroadPointsCount)
+{
+	const int g = 10;
+
+	float startAngleRad = startAngle / (180 / math::PI);
+
+	float flyLength = this->CalculateFlyLength(startAngle, startSpeed);
+
+	float time = 0.f;
+	float splineTime = 0.f;
+	float x = 0.f;
+	float y = 0.f;
+
+	float step = flyLength / 10;
+
+	bool bPointsToRight = startAngle < 90.f || startAngle > 270.f;
+
+	FPoint splinePoint = startPoint;
+	float currSpeedX = startSpeed * math::cos(startAngleRad);
+	float currSpeedY = 0.f;
+
+	bool bStop = false;
+
+	//Add keys to trajectorySpline until first point outside screenBounds 
+	do
+	{
+		time = x / startSpeed / math::cos(startAngleRad);
+		currSpeedY = startSpeed * math::sin(startAngleRad) - g * time;
+		FPoint speedPoint(currSpeedX, currSpeedY);
+		float currSpeed = speedPoint.GetDistanceToOrigin();
+
+		splineTime = x / startSpeed / math::cos(startAngleRad) * this->timeMultiplyer;
+		y = CalculateY(x, startSpeed, startAngleRad);
+
+		splinePoint = FPoint(x, y);
+		splinePoint += startPoint;
+
+		this->trajectoryEndTime = splineTime;
+		this->trajectorySpline.addKey(splineTime, splinePoint);
+		this->speedSpline.addKey(splineTime, currSpeed);
+
+		bPointsToRight ? x += step : x -= step;
+
+		bool bContainsPoint = this->screenBounds.Contains(splinePoint);
+		ProcessTrajectoryVariables(bStop, bContainsPoint, bPointAbroad,
+			maxAbroadPoints, abroadPointsCount);
+
+	} while (!bStop/*this->screenBounds.Contains(splinePoint)*//*overCount < 20*/);
+}
+
+void Bullet::CalculateVerticalTrajectory(float startAngle, float startSpeed, FPoint startPoint,
+	bool& bPointAbroad, const int maxAbroadPoints, int& abroadPointsCount)
+{
+	const int g = 10;
+
+	float time = 0.f;
+	float splineTime = 0.f;
+	float currSpeed = startSpeed;
+	FPoint splinePoint = startPoint;
+	float dist = 0.f;
+	bool bUpRight = startAngle == 90.f;
+
+	bool bStop = false;
+
+	do
+	{
+		splinePoint.y = startPoint.y + dist * (bUpRight ? 1.f : -1.f);
+
+		this->trajectoryEndTime = splineTime;
+		this->speedSpline.addKey(splineTime, math::abs(currSpeed));
+		this->trajectorySpline.addKey(splineTime, splinePoint);
+
+		splineTime += (1.f * this->timeMultiplyer);
+		time += 1.f;
+		currSpeed = startSpeed + g * time * (bUpRight ? -1.f : 1.f);
+		dist = startSpeed * time + g * math::sqr(time) / 2 * (bUpRight ? -1.f : 1.f);
+
+		bool bContainsPoint = this->screenBounds.Contains(splinePoint);
+		this->ProcessTrajectoryVariables(bStop, bContainsPoint, bPointAbroad,
+			maxAbroadPoints, abroadPointsCount);
+
+	} while (!bStop/*this->screenBounds.Contains(splinePoint)*/);
 }
