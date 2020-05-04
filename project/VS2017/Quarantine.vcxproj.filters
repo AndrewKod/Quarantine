@@ -1,0 +1,153 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="..\..\src\Main.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\stdafx.cpp">
+      <Filter>Header Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\TestAppDelegate.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\TestWidget.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\widgets\GameWidget.cpp">
+      <Filter>Source Files\Widgets</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\widgets\EndWidget.cpp">
+      <Filter>Source Files\Widgets</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\QuarantineAppDelegate.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\widgets\SettingsWidget.cpp">
+      <Filter>Source Files\Widgets</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\widgets\OutdoorWidget.cpp">
+      <Filter>Source Files\Widgets</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\widgets\StartWidget.cpp">
+      <Filter>Source Files\Widgets</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\game_types\Target.cpp">
+      <Filter>Source Files\Game Types</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\game_types\CovidMonster.cpp">
+      <Filter>Source Files\Game Types</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\game_types\CovidSpore.cpp">
+      <Filter>Source Files\Game Types</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\game_types\Bullet.cpp">
+      <Filter>Source Files\Game Types</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\utilities\Utilities.cpp">
+      <Filter>Source Files\Utilities</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\src\stdafx.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\TestAppDelegate.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\TestWidget.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\widgets\GameWidget.h">
+      <Filter>Source Files\Widgets</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\widgets\EndWidget.h">
+      <Filter>Source Files\Widgets</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\QuarantineAppDelegate.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\QuarantineMessageFunc.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\widgets\SettingsWidget.h">
+      <Filter>Source Files\Widgets</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\widgets\OutdoorWidget.h">
+      <Filter>Source Files\Widgets</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\widgets\StartWidget.h">
+      <Filter>Source Files\Widgets</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\game_types\Target.h">
+      <Filter>Source Files\Game Types</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\game_types\CovidMonster.h">
+      <Filter>Source Files\Game Types</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\game_types\CovidSpore.h">
+      <Filter>Source Files\Game Types</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\game_types\Bullet.h">
+      <Filter>Source Files\Game Types</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\utilities\Utilities.h">
+      <Filter>Source Files\Utilities</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\Globals.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Xml Include="..\..\bin\base_p\TestLayers.xml">
+      <Filter>XML</Filter>
+    </Xml>
+    <Xml Include="..\..\bin\base_p\TestResources.xml">
+      <Filter>XML</Filter>
+    </Xml>
+    <Xml Include="..\..\bin\base_p\Layers.xml">
+      <Filter>XML</Filter>
+    </Xml>
+    <Xml Include="..\..\bin\base_p\Resources.xml">
+      <Filter>XML</Filter>
+    </Xml>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{18325921-5290-440a-b824-a0401145a95c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{030543ec-5285-4b50-af1f-9e5e271766b0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Scripts">
+      <UniqueIdentifier>{7184b414-4794-4d7f-b450-dfc276e043df}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{d0859055-d9ba-4421-b420-6ba7a2fea406}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="XML">
+      <UniqueIdentifier>{df64d515-11a3-4590-a528-05763cc795a6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Widgets">
+      <UniqueIdentifier>{42877853-1ecd-4567-aa2f-354886cdf02c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Game Types">
+      <UniqueIdentifier>{e1dcdcc9-7526-42a1-b374-5b398e0490f6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Utilities">
+      <UniqueIdentifier>{13dcb521-7707-4c59-9660-9d612b952d25}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="resource.rc">
+      <Filter>Resource Files</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\..\bin\base_p\test_start.lua">
+      <Filter>Scripts</Filter>
+    </None>
+    <None Include="..\..\bin\base_p\start.lua">
+      <Filter>Scripts</Filter>
+    </None>
+  </ItemGroup>
+</Project>

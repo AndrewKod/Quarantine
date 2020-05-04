@@ -1,0 +1,6 @@
+engine/
+libs/
+obj/
+project/VS2017/.vs/
+project/VS2017/x64/
+bin/Quarantine.pdb

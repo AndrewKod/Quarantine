@@ -1,0 +1,88 @@
+<?xml version="1.0"?>
+<Resources>
+	<FreeTypeFonts group="TestGroup" upload="false">    
+		<font name="arial" family="arial" size="12" color="255;255;255;255" letterSpacing="0">
+			<Effect alpha="0.1" type="shadow" blurX="2" blurY="2" strength="50" angle="0" inner="false" color="0;0;0;255" offset="0"/>
+		</font>
+    <font name="arial_large" family="arial" size="32" color="255;255;255;255" letterSpacing="0">
+      <Effect alpha="0.1" type="shadow" blurX="2" blurY="2" strength="50" angle="0" inner="false" color="0;0;0;255" offset="0"/>
+    </font>
+	</FreeTypeFonts>
+	<Textures>
+    <texture id="Star" path="textures/star.png" group="TestGroup" upload="false"/>
+    <texture id="Circle" path="textures/circle.png" group="TestGroup" upload="false"/>
+    <texture id="btnStart_Text" path="textures/Local/Buttons/Start_text.png" group="MainMenu" upload="true"/>    
+
+    <texture id="covid_monster_scr" path="textures/covid_monster_scr.png" upload="false" />
+    <texture id="covid_monster" path="textures/covid_monster.png" />
+
+    <texture id="health_fragment_vertical_blue" path="textures/health_fragment_vertical_blue.png" />
+    <texture id="health_fragment_vertical_red" path="textures/health_fragment_vertical_red.png" />
+    <texture id="health_fragment_horizontal_blue" path="textures/health_fragment_horizontal_blue.png" />
+    <texture id="health_fragment_horizontal_red" path="textures/health_fragment_horizontal_red.png" />
+    
+
+    <texture id="start_normal" path="textures/Buttons/start_normal.png" />
+    <texture id="start_active" path="textures/Buttons/start_active.png" />
+    <texture id="start_pressed" path="textures/Buttons/start_pressed.png" />
+
+    <texture id="options_normal" path="textures/Buttons/options_normal.png" />
+    <texture id="options_active" path="textures/Buttons/options_active.png" />
+    <texture id="options_pressed" path="textures/Buttons/options_pressed.png" />
+
+    <texture id="ok_normal" path="textures/Buttons/ok_normal.png" />
+    <texture id="ok_active" path="textures/Buttons/ok_active.png" />
+    <texture id="ok_pressed" path="textures/Buttons/ok_pressed.png" />
+
+    <texture id="cancel_normal" path="textures/Buttons/cancel_normal.png" />
+    <texture id="cancel_active" path="textures/Buttons/cancel_active.png" />
+    <texture id="cancel_pressed" path="textures/Buttons/cancel_pressed.png" />
+
+    <texture id="add_normal" path="textures/Buttons/add_normal.png" />
+    <texture id="add_active" path="textures/Buttons/add_active.png" />
+    <texture id="add_pressed" path="textures/Buttons/add_pressed.png" />
+
+    <texture id="subtract_normal" path="textures/Buttons/subtract_normal.png" />
+    <texture id="subtract_active" path="textures/Buttons/subtract_active.png" />
+    <texture id="subtract_pressed" path="textures/Buttons/subtract_pressed.png" />
+
+    <texture id="quarantine_title" path="textures/quarantine_title.png" />
+
+    <texture id="medical_mask" path="textures/medical_mask.png" />
+
+    <texture id="virus_red" path="textures/virus_red.png" />
+    <texture id="virus_red_big" path="textures/virus_red_big.png" />
+    <texture id="virus_red_small" path="textures/virus_red_small.png" />
+    <texture id="virus_blue_small" path="textures/virus_blue_small.png" />
+
+    <texture id="landscape" path="textures/landscape.png" />
+
+    <texture id="wall" path="textures/wall.png" />
+
+    <texture id="opened_door" path="textures/opened_door.png" />
+    <texture id="closed_door" path="textures/closed_door.png" />
+    
+    <!--______________________________________________VISITORS______________________________________________-->
+    
+    <!--UNMASKED-->
+    <texture id="man" path="textures/man.png" />
+    <texture id="woman" path="textures/woman.png" />
+    <texture id="doctor" path="textures/doctor.png" />
+    <texture id="young_man" path="textures/young_man.png" />
+    <texture id="young_woman" path="textures/young_woman.png" />
+
+    <!--MASKED-->
+    <texture id="man_masked" path="textures/man_masked.png" />
+    <texture id="woman_masked" path="textures/woman_masked.png" />
+    <texture id="doctor_masked" path="textures/doctor_masked.png" />
+    <texture id="young_man_masked" path="textures/young_man_masked.png" />
+    <texture id="young_woman_masked" path="textures/young_woman_masked.png" />
+
+
+    <!--______________________________________________GUN______________________________________________-->
+    <texture id="gun" path="textures/gun.png" />
+    <texture id="aim" path="textures/aim.png" />
+    <texture id="bullet" path="textures/bullet.png" />
+    
+	</Textures>
+</Resources>

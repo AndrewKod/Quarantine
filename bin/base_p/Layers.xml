@@ -1,0 +1,97 @@
+<?xml version="1.0"?>
+<GUI>
+
+  <!--___________________________START LAYER___________________________-->
+  <Layer name="StartLayer">   
+    <Controls>
+      
+      <StartWidget name="StartWidget"/>
+      
+      <Panel name="StartButtonsPanel">
+        <position x="614" />        
+        <Controls>          
+          <Button name="Start_Start_btn">
+            <position x="120" y="250"/>
+            <state normal="start_normal" active="start_active" pressed="start_pressed"/>
+          </Button>
+           <Button name="Start_Settings_btn">
+             <position x="120" y="180"/>
+             <state normal="options_normal" active="options_active" pressed="options_pressed"/>
+           </Button>
+        </Controls>
+      </Panel>
+    </Controls>
+  </Layer>
+
+
+  <!--___________________________SETTINGS LAYER___________________________-->
+  <Layer name="SettingsLayer">
+    <Controls>
+      
+      <StartWidget name="StartWidget"/>
+      
+      <Panel name="SettingsButtonsPanel">
+        <position x="614" />
+        <Controls>
+
+          <SettingsWidget name="SettingsWidget"/>
+
+          <Button name="Settings_OK_btn">
+            <position x="120" y="100"/>
+            <state normal="ok_normal" active="ok_active" pressed="ok_pressed"/>
+          </Button>
+          <Button name="Settings_Cancel_btn">
+            <position x="120" y="30"/>
+            <state normal="cancel_normal" active="cancel_active" pressed="cancel_pressed"/>
+          </Button>
+
+          <Button name="Settings_AddCount_btn">
+            <position x="350" y="300"/>
+            <state normal="add_normal" active="add_active" pressed="add_pressed"/>
+          </Button>
+          <Button name="Settings_AddSpeed_btn">
+            <position x="350" y="250"/>
+            <state normal="add_normal" active="add_active" pressed="add_pressed"/>
+          </Button>
+          <Button name="Settings_AddTime_btn">
+            <position x="350" y="200"/>
+            <state normal="add_normal" active="add_active" pressed="add_pressed"/>
+          </Button>
+          <Button name="Settings_SubtractCount_btn">
+            <position x="250" y="300"/>
+            <state normal="subtract_normal" active="subtract_active" pressed="subtract_pressed"/>
+          </Button>
+          <Button name="Settings_SubtractSpeed_btn">
+            <position x="250" y="250"/>
+            <state normal="subtract_normal" active="subtract_active" pressed="subtract_pressed"/>
+          </Button>
+          <Button name="Settings_SubtractTime_btn">
+            <position x="250" y="200"/>
+            <state normal="subtract_normal" active="subtract_active" pressed="subtract_pressed"/>
+          </Button>
+
+        </Controls>
+      </Panel>
+    </Controls>
+  </Layer>
+
+  <Layer name="EndLayer">
+
+  </Layer>  
+  
+  <Layer name="OutdoorLayer" group ="GameLayers">
+    <Controls>
+      <OutdoorWidget name="OutdoorWidget"/>
+    </Controls>
+  </Layer>  
+
+  <Layer name="MainLayer" group ="GameLayers">
+    <Controls>
+
+      <GameWidget name="GameWidget"/>    
+      
+    </Controls>
+  </Layer>
+  
+  
+</GUI>
