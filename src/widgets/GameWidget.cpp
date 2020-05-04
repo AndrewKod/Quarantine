@@ -41,7 +41,7 @@ void GameWidget::Init()
 	this->bGameStarted = false;
 
 	this->sporeSpawnStartDelay = 0.1f;
-	this->sporeSpawnGameDelay = 3.f;
+	this->sporeSpawnGameDelay = 1.f;
 	this->sporeSpawnTimer = 0.f;
 
 	//Get settings defined in input.txt
@@ -77,8 +77,15 @@ void GameWidget::Init()
 
 	this->gunBulletHeight = 40.f;
 	this->gunBulletOffset = this->bulletTex->getBitmapRect().Width() / 2;
+	
+	///////////////////////////////////////////PARTICLES//////////////////////////////////////////
+	
+	this->trailEff = nullptr;
+	this->hitEff = nullptr;
+	this->destroyEff = nullptr;
 
-	//this->destroyBulletDelegate = Delegate<int>::Create<GameWidget, &GameWidget::DestroyBullet>(this);
+	this->destroySporeDelegate = Delegate<FPoint>::Create<GameWidget, &GameWidget::DestroySpore>(this);
+	this->hitSporeDelegate = Delegate<FPoint>::Create<GameWidget, &GameWidget::HitSpore>(this);
 
 }
 
@@ -141,7 +148,7 @@ void GameWidget::Draw()
 
 	this->DrawGun();
 
-	
+	this->effCont.Draw();
 }
 
 void GameWidget::Update(float dt)
@@ -158,6 +165,8 @@ void GameWidget::Update(float dt)
 		this->sporeSpawnTimer += dt;
 		this->UpdateSpores(dt);
 	}
+
+	this->effCont.Update(dt);
 }
 
 bool GameWidget::MouseDown(const IPoint &mouse_pos)
@@ -214,6 +223,8 @@ void GameWidget::AcceptMessage(const Message& message)
 		float sporeSpeedCoef = this->speedCoef / this->gameSpeed;
 		for (size_t sporeId = 0; sporeId < this->covidSpores.size(); sporeId++)
 		{
+			if (this->covidSpores[sporeId] == nullptr)
+				continue;
 			this->covidSpores[sporeId]->SetSpeedCoef(sporeSpeedCoef);
 		}
 	}
@@ -267,21 +278,52 @@ void GameWidget::CreateCovidMonster()
 
 void GameWidget::TryAddCovidSpore(int templateId, FPoint startPoint, float startAngle)
 {
-	if (this->covidSpores.size() < this->covidMonster->GetMaxSporeCount() 
-		&& 
-		templateId >= 0 && templateId < this->covidSporeTemplates.size())
+	if (templateId >= 0 && templateId < this->covidSporeTemplates.size())
 	{
 		SporeTemplate& sporeTemplate = this->covidSporeTemplates[templateId];
 
 		float sporeSpeedCoef = this->speedCoef / this->gameSpeed;
 
-		this->covidSpores.push_back(new CovidSpore(sporeTemplate.covidSporeTexture,
+		
+
+		if (this->covidSpores.size() < this->covidMonster->GetMaxSporeCount())
+		{
+			CovidSpore* newSpore = new CovidSpore(sporeTemplate.covidSporeTexture,
 			Core::resourceManager.Get<Render::Texture>("health_fragment_horizontal_blue"),
 			Core::resourceManager.Get<Render::Texture>("health_fragment_horizontal_red"),
 			2, sporeTemplate.maxHealth, sporeTemplate.sporeSpline, sporeTemplate.splineEndTime, sporeSpeedCoef,
-			startPoint, startAngle, sporeTemplate.splineStartAngle));
+			startPoint, startAngle, sporeTemplate.splineStartAngle);
 
-		this->covidMonster->AddSpores(1);
+			newSpore->OnHit += this->hitSporeDelegate;
+			newSpore->OnDestroy+= this->destroySporeDelegate;
+
+			this->covidSpores.push_back(newSpore);	
+
+			this->covidMonster->AddSpores();		
+		}
+		else if (this->covidSpores.size() == this->covidMonster->GetMaxSporeCount())
+		{
+			for (size_t sporeId = 0; sporeId < this->covidSpores.size(); sporeId++)
+			{
+				if (this->covidSpores[sporeId] == nullptr)
+				{
+					CovidSpore* newSpore = new CovidSpore(sporeTemplate.covidSporeTexture,
+						Core::resourceManager.Get<Render::Texture>("health_fragment_horizontal_blue"),
+						Core::resourceManager.Get<Render::Texture>("health_fragment_horizontal_red"),
+						2, sporeTemplate.maxHealth, sporeTemplate.sporeSpline, sporeTemplate.splineEndTime, sporeSpeedCoef,
+						startPoint, startAngle, sporeTemplate.splineStartAngle);
+
+					newSpore->OnHit += this->hitSporeDelegate;
+					newSpore->OnDestroy += this->destroySporeDelegate;
+
+					this->covidSpores[sporeId] = newSpore;
+
+					this->covidMonster->AddSpores();
+
+					break;
+				}
+			}
+		}		
 	}
 }
 
@@ -362,26 +404,35 @@ void GameWidget::CheckSporeCollision()
 				continue;
 			for (int l = cellId.x - 1; l <= cellId.x + 1; l++)
 			{
-				if (l < 0 || l >= this->gridSize.x || (l == cellId.x && k == cellId.y))
+				if (l < 0 || l >= this->gridSize.x)
 					continue;
-				//check spores for collision with other spores
-				IPoint checkingCellId(l, k);
-				//CheckCoupleSporesCollision(sporeId, checkingCellId, checkedSpores);
-
+				//check spores for collision with bullet
 				
+				std::set<size_t>& sporeIds = this->sporeGrid[k][l].sporeIds;
+				for (std::set<size_t>::iterator IdsIt = sporeIds.begin(); IdsIt != sporeIds.end(); IdsIt++)
+				{			
+					size_t sporeId = *IdsIt;
+					if (this->covidSpores[sporeId]!=nullptr && this->covidSpores[sporeId]->CheckBulletCollision(bullet))
+					{
+						checkedSpores.insert(sporeId);					
+					}
+				}				
 			}			
 		}
 	}
 
 	//Check Screen collision
-	for (size_t i = 0; i < this->covidSpores.size(); i++)
+	for (size_t sporeId = 0; sporeId < this->covidSpores.size(); sporeId++)
 	{
-		foundCheckedId = checkedSpores.find(i);
+		if (this->covidSpores[sporeId] == nullptr)
+			continue;
+
+		foundCheckedId = checkedSpores.find(sporeId);
 		if (foundCheckedId == checkedSpores.end())//checkedSpores do not contains current spore
 		{
-			if (this->covidSpores[i]->CheckScreenCollision(this->sporeScreenBounds))
+			if (this->covidSpores[sporeId]->CheckScreenCollision(this->sporeScreenBounds))
 			{
-				checkedSpores.insert(i);
+				checkedSpores.insert(sporeId);
 			}
 		}
 	}
@@ -390,6 +441,9 @@ void GameWidget::CheckSporeCollision()
 	//Check collision with other spores by searching in neighbouring grid cells
 	for (size_t sporeId = 0; sporeId < this->covidSpores.size(); sporeId++)
 	{
+		if (this->covidSpores[sporeId] == nullptr)
+			continue;
+
 		foundCheckedId = checkedSpores.find(sporeId);
 		if (foundCheckedId == checkedSpores.end())//checkedSpores do not contains current spore yet
 		{
@@ -431,9 +485,15 @@ void GameWidget::CheckCoupleSporesCollision(size_t originSporeId, IPoint checkin
 	for (std::set<size_t>::iterator IdsIt = sporeIds.begin(); IdsIt != sporeIds.end(); IdsIt++)
 	{
 		size_t otherSporeId = *IdsIt;
+
+		if (this->covidSpores[otherSporeId] == nullptr)
+			continue;
+
 		if (this->covidSpores[originSporeId]->GetCellId() == checkingCellId && otherSporeId == originSporeId)
 			continue;
+
 		foundCheckedId = checkedSpores.find(otherSporeId);
+
 		if (foundCheckedId == checkedSpores.end() &&
 			this->covidSpores[originSporeId]->CheckSporeCollision(this->covidSpores[otherSporeId]))
 		{
@@ -500,6 +560,15 @@ void GameWidget::DrawSpores()
 
 	for (size_t i = 0; i < this->covidSpores.size(); i++)
 	{
+		if (this->covidSpores[i] == nullptr)
+			continue;
+
+		if (this->covidSpores[i]->WantsDestroy())
+		{
+			this->DeleteSpore(i);
+			continue;
+		}
+
 		this->covidSpores[i]->Draw();
 
 		//stdafx.h	
@@ -524,6 +593,7 @@ void GameWidget::DrawSpores()
 			this->covidSpores[i]->SetCellId(newCell);
 		}
 	}
+
 	this->CheckSporeCollision();
 
 	if (this->sporeSpawnTimer >= this->sporeSpawnGameDelay)
@@ -541,8 +611,22 @@ void GameWidget::UpdateSpores(float dt)
 {
 	for (size_t sporeId = 0; sporeId < this->covidSpores.size(); sporeId++)
 	{
+		if (this->covidSpores[sporeId] == nullptr)
+			continue;
+
 		this->covidSpores[sporeId]->Update(dt);
 	}
+}
+
+void GameWidget::DeleteSpore(size_t sporeId)
+{
+	IPoint cellId = this->covidSpores[sporeId]->GetCellId();
+	this->sporeGrid[cellId.y][cellId.x].sporeIds.erase(sporeId);
+
+	delete this->covidSpores[sporeId];
+	this->covidSpores[sporeId] = nullptr;
+
+	this->covidMonster->SubtractSpores();	
 }
 
 void GameWidget::DrawAim()
@@ -643,10 +727,8 @@ void GameWidget::ShootGunBullet()
 		//translate start point back to it's space
 		startPoint = transStartPoint + this->gunCenterPos;
 
-		Bullet* bullet = new Bullet(this->bullets.size(), this->bulletTex, this->bulletTrail, 135,
-			bulletScreenBounds, this->aimAngle, startPoint);
-
-		//bullet->OnDestroy += this->destroyBulletDelegate;
+		Bullet* bullet = new Bullet(this->bullets.size(), this->bulletTex, 135,
+			bulletScreenBounds, this->aimAngle, startPoint);		
 		
 		this->bullets.insert(bullet);
 	}
@@ -660,12 +742,18 @@ void GameWidget::ShootGunMask()
 	}
 }
 
-//void GameWidget::DestroyBullet(const void* pSender, int& bulletId)
-//{
-//	Bullet* bullet = (Bullet*)pSender;
-//	if (bullet != nullptr)
-//	{		
-//		this->bullets.erase(bullet);					
-//	}
-//}
+void GameWidget::HitSpore(const void * pSender, FPoint & position)
+{
+	ParticleEffectPtr eff = effCont.AddEffect("FindCoin2");
+	eff->posX = position.x;
+	eff->posY = position.y;
+	eff->Reset();
+}
+
+void GameWidget::DestroySpore(const void * pSender, FPoint & position)
+{
+
+}
+
+
 

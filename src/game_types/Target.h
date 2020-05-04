@@ -1,5 +1,7 @@
 #pragma once
 
+class Bullet;
+
 class Target
 {
 
@@ -31,6 +33,13 @@ protected:
 	//updating every frame
 	FPoint currentPosition;
 
+	bool bWantsDestroy;
+
+public:
+
+	Event<FPoint> OnHit;
+	Event<FPoint> OnDestroy;
+
 public:
 
 	Target() {}
@@ -46,6 +55,10 @@ public:
 	virtual void ApplyDamage(int dmgPoints);
 
 	virtual void Destroy();
+
+	virtual void Hit();
+
+	virtual bool CheckBulletCollision(Bullet* bullet);
 
 	IRect GetBitmapRect()		{ return this->targetTex->getBitmapRect(); }
 	FPoint GetCurrentPosition() { return this->currentPosition; }

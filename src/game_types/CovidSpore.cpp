@@ -2,6 +2,7 @@
 #include "Globals.h"
 #include "CovidSpore.h"
 #include "Utilities.h"
+#include "Bullet.h"
 
 CovidSpore::CovidSpore(Render::Texture * targetTex, Render::Texture * healthSegmentTex, Render::Texture * healthSegmentDmgTex,
 	int healthSegmentSpace, int maxHealth,
@@ -21,7 +22,7 @@ CovidSpore::CovidSpore(Render::Texture * targetTex, Render::Texture * healthSegm
 	}	
 	
 	this->TransformTrajectory();
-
+	
 	this->currentPosition = trajectoryStart;
 	this->centerOffset = FPoint(this->targetTex->Width() / 2, this->targetTex->Height() / 2);
 	this->CalcCenterPosition();
@@ -69,6 +70,17 @@ void CovidSpore::Update(float dt)
 	}
 }
 
+void CovidSpore::Destroy()
+{
+	this->bWantsDestroy = true;
+	this->OnDestroy.Invoke(this, this->centerPosition);
+}
+
+void CovidSpore::Hit()
+{
+	this->OnHit.Invoke(this, this->centerPosition);
+}
+
 bool CovidSpore::CheckScreenCollision(FRect screenBounds)
 {
 	float mirrorAngle = 0.f;
@@ -105,75 +117,101 @@ bool CovidSpore::CheckSporeCollision(CovidSpore* otherSpore)
 {
 	float minDist = this->centerOffset.x + otherSpore->GetCenterOffset().x;
 
-	FPoint otherCenterPos = otherSpore->GetCenterPosition();
+	FPoint otherCenterPos = otherSpore->GetCurrentPosition();
 	float dist = this->centerPosition.GetDistanceTo(otherCenterPos);
 
-	if (dist <= minDist)//spores are colliding
+	float dDist = minDist - dist;
+	float additionalDist = 5.f;
+	float bounceDist = dDist + additionalDist;
+
+	if (dist <= minDist)//bodies are colliding
 	{
 		FPoint translatedThisPos = this->centerPosition - otherCenterPos;
-		float lineAngle = translatedThisPos.GetAngle() * 180 / math::PI;
+		//Angle of line between spores centers
+		float sporesAngle = translatedThisPos.GetAngle() * 180 / math::PI;
 
-		float thisMirrorAngle = lineAngle + 90;
-		float otherMirrorAngle = lineAngle - 90;
+		float thisMirrorAngle = sporesAngle + 90;
+		float otherMirrorAngle = sporesAngle - 90;
 
-		Utilities::CorrectingAngle(lineAngle);
+		Utilities::CorrectingAngle(sporesAngle);
 		Utilities::CorrectingAngle(thisMirrorAngle);
 		Utilities::CorrectingAngle(otherMirrorAngle);
-
-		//////////////////////////////////CHANGES/////////////////////////////////
-		//////////////////////////////////////////////////////////////////////////
-		bool bSuccess = false;
-		float thisSporeDirection = this->GetSporeDirection(bSuccess);
-
-		float thisReflectedAngle = Utilities::CalcReflectedAngle(thisSporeDirection, thisMirrorAngle);
-		Utilities::CorrectingAngle(thisReflectedAngle);
-
-		bool bValidReflectedAnge = ValidReflectedAngle(thisReflectedAngle, thisMirrorAngle);
-
-		if (!bSuccess || !bValidReflectedAnge)
-		{
-			thisSporeDirection = lineAngle + 180;
-			thisReflectedAngle = lineAngle;
-		}
-
-		bSuccess = false;
-		float otherSporeDirection = otherSpore->GetSporeDirection(bSuccess);
-
-		float otherReflectedAngle = Utilities::CalcReflectedAngle(otherSporeDirection, otherMirrorAngle);
-		Utilities::CorrectingAngle(otherReflectedAngle);
-
-		bValidReflectedAnge = ValidReflectedAngle(otherReflectedAngle, otherMirrorAngle);
-		if (!bSuccess || !bValidReflectedAnge)
-		{
-			otherSporeDirection = lineAngle /*+ 180*/;
-			otherReflectedAngle = lineAngle + 180;
-			Utilities::CorrectingAngle(otherReflectedAngle);
-		}
 		
-		//Calc new trajectory spline angle for transformation
-		this->trajectoryGlobalAngle = CalcReflectedSplineAngle(thisSporeDirection, thisMirrorAngle);		
-
-		float dDist = minDist - dist;
-		float additionalDist = 5.f;
-		float bounceDist = dDist + additionalDist;
-
-		FPoint distPoint(bounceDist, 0.f);
-		distPoint.Rotate(thisReflectedAngle / (180 / math::PI));
-
-		this->trajectoryStart = this->currentPosition + distPoint;
-
 		//transforming this trajectorySpline to calculated point and angle and restarting spline animation
-		RestartSplineAnimation();
+		this->ReflectSporeTrajectory(sporesAngle, thisMirrorAngle, bounceDist);
 
 		//transforming other trajectorySpline to calculated point and angle and restarting spline animation
-		otherSpore->SetTrajectoryGlobalAngle(CalcReflectedSplineAngle(otherSporeDirection, otherMirrorAngle));		
+		otherSpore->ReflectSporeTrajectory(sporesAngle, otherMirrorAngle, bounceDist, true);
 
-		distPoint = FPoint(bounceDist, 0.f);
-		distPoint.Rotate(otherReflectedAngle / (180 / math::PI));
+		return true;
+	}
 
-		otherSpore->SetTrajectoryStart(otherSpore->GetCurrentPosition() + distPoint);
+	return false;
+}
 
-		otherSpore->RestartSplineAnimation();
+void CovidSpore::ReflectSporeTrajectory(float sporesAngle, float mirrorAngle, float bounceDist, bool bIsOpposite)
+{
+	bool bSuccess = false;
+	float SporeDirection = this->GetSporeDirection(bSuccess);
+
+	float ReflectedAngle = Utilities::CalcReflectedAngle(SporeDirection, mirrorAngle);
+	Utilities::CorrectingAngle(ReflectedAngle);
+
+	bool bValidReflectedAnge = ValidReflectedAngle(ReflectedAngle, mirrorAngle);
+
+	if (!bSuccess || !bValidReflectedAnge)
+	{
+		SporeDirection = sporesAngle + 180 * !bIsOpposite;
+		ReflectedAngle = sporesAngle + 180 * bIsOpposite;
+		if(bIsOpposite)
+			Utilities::CorrectingAngle(ReflectedAngle);
+	}
+
+	//Calc new trajectory spline angle for transformation
+	this->trajectoryGlobalAngle = CalcReflectedSplineAngle(SporeDirection, mirrorAngle);
+
+	FPoint distPoint(bounceDist, 0.f);
+	distPoint.Rotate(ReflectedAngle / (180 / math::PI));
+
+	this->trajectoryStart = this->currentPosition + distPoint;
+
+	//transforming this trajectorySpline to calculated point and angle and restarting spline animation
+	RestartSplineAnimation();
+}
+
+bool CovidSpore::CheckBulletCollision(Bullet* bullet)
+{
+	float minDist = this->centerOffset.x + bullet->GetCenterOffset().x;
+
+	FPoint otherCenterPos = bullet->GetCurrentPosition();
+	float dist = this->centerPosition.GetDistanceTo(otherCenterPos);
+
+	float dDist = minDist - dist;
+	float additionalDist = 5.f;
+	float bounceDist = dDist + additionalDist;
+
+	if (dist <= minDist)//bodies are colliding
+	{
+		this->ApplyDamage(1);
+
+		if (this->currHealth > 0)
+		{
+			FPoint translatedThisPos = this->centerPosition - otherCenterPos;
+			float sporesAngle = translatedThisPos.GetAngle() * 180 / math::PI;
+
+			float thisMirrorAngle = sporesAngle + 90;
+			float otherMirrorAngle = sporesAngle - 90;
+
+			Utilities::CorrectingAngle(sporesAngle);
+			Utilities::CorrectingAngle(thisMirrorAngle);
+			Utilities::CorrectingAngle(otherMirrorAngle);
+
+			//transforming this trajectorySpline to calculated point and angle and restarting spline animation
+			this->ReflectSporeTrajectory(sporesAngle, thisMirrorAngle, bounceDist);
+		}		
+		
+		//destroying bullet
+		bullet->Destroy();
 
 		return true;
 	}

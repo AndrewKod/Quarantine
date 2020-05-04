@@ -1,6 +1,7 @@
 #include "stdafx.h"
 #include "Globals.h"
 #include "Target.h"
+#include "Bullet.h"
 
 //both healthSegments have to have same size
 Target::Target(Render::Texture * targetTex, Render::Texture * healthSegmentTex, Render::Texture * healthSegmentDmgTex,
@@ -41,6 +42,8 @@ Target::Target(Render::Texture * targetTex, Render::Texture * healthSegmentTex, 
 	this->healthBarOffset.y = targetH;
 
 	this->currentPosition = FPoint(0.f, 0.f);
+
+	this->bWantsDestroy = false;
 }
 
 void Target::Draw()
@@ -92,10 +95,25 @@ void Target::ApplyDamage(int dmgPoints)
 		this->currHealth -= dmgPoints;
 		if (this->currHealth <= 0)
 			this->Destroy();
+		else
+			this->Hit();
 	}
 }
 
 void Target::Destroy()
 {
+	this->bWantsDestroy = true;
+	this->OnDestroy.Invoke(this, this->currentPosition + 
+		FPoint(this->targetTex->getBitmapRect().Width()/2, this->targetTex->getBitmapRect().Height() / 2));
+}
 
+void Target::Hit()
+{
+	this->OnHit.Invoke(this, this->currentPosition +
+		FPoint(this->targetTex->getBitmapRect().Width() / 2, this->targetTex->getBitmapRect().Height() / 2));
+}
+
+bool Target::CheckBulletCollision(Bullet * bullet)
+{
+	return false;
 }

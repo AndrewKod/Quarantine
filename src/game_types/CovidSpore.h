@@ -45,6 +45,7 @@ public:
 	//FPoint GetCurrentPosition()			{ return this->currentPosition; }
 	FPoint GetCenterPosition()			{ return this->centerPosition; }
 	FPoint GetCenterOffset()			{ return this->centerOffset; }
+	bool WantsDestroy()					{ return this->bWantsDestroy; }
 
 	void SetTrajectoryStart(FPoint trajectoryStart)				{ this->trajectoryStart = trajectoryStart; }
 	void SetTrajectoryGlobalAngle(float trajectoryGlobalAngle)	{ this->trajectoryGlobalAngle = trajectoryGlobalAngle; }
@@ -57,12 +58,28 @@ public:
 	void Draw() override;
 
 	void Update(float dt) override;
+
+	void Destroy() override;
+
+	void Hit() override;
 	
 	//returns true if spore collides screenBounds
 	bool CheckScreenCollision(FRect screenBounds);
 
 	//returns true if spores colliding
 	bool CheckSporeCollision(CovidSpore* otherSpore);
+
+	//transforming trajectorySpline to calculated point and angle and restarting spline animation
+	//sporesAngle - angle of line builded on spores centers
+	//mirrorAngle - angle for trajectory reflection
+	//bounceDist - distance of additional bounce in reflected direction after collision
+	//bIsOpposite - indicates if spore is second one in couple of collision test
+	void ReflectSporeTrajectory(float sporesAngle, float mirrorAngle, float bounceDist, bool bIsOpposite = false);
+
+	//returns true if spore collides bullet
+	bool CheckBulletCollision(Bullet* bullet) override;
+
+
 
 private:
 

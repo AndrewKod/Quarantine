@@ -8,12 +8,11 @@ Bullet::Bullet()
 	CalculateTrajectory(5.f, 50.f, FPoint(0.f, 0.f));	
 }
 
-Bullet::Bullet(int bulletId, Render::Texture * bulletTex, ParticleEffectPtr trailEff, float speed,
+Bullet::Bullet(int bulletId, Render::Texture * bulletTex, float speed,
 	FRect screenBounds,	float startAngle, FPoint startPoint)
 {
 	this->bulletId = bulletId;
-	this->bulletTex = bulletTex;
-	this->trailEff = trailEff;
+	this->bulletTex = bulletTex;	
 	this->speed = speed;	
 	this->splineSpeedCoef = 2.f;
 	this->timeMultiplyer = 1.f / 25.f;
@@ -84,8 +83,19 @@ void Bullet::Update(float dt)
 	this->deltaTime = dt;
 }
 
+float Bullet::GetBulletDirection(bool & bSuccess)
+{
+	float splineTime = this->timer / this->splineSpeedCoef;
+	float prevSplineTime = (this->timer - this->deltaTime) / this->splineSpeedCoef;
+	float bulletDirection = Utilities::GetTrajectoryAngle(this->trajectorySpline, this->currentPosition,
+		splineTime, prevSplineTime, bSuccess);
+
+	return bulletDirection;
+}
+
 void Bullet::Destroy()
 {		
+	this->bWantsDestroy = true;
 	//this->OnDestroy.Invoke(this, this->bulletId);	
 }
 

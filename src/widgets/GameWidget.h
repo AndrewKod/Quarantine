@@ -82,8 +82,7 @@ class GameWidget : public GUI::Widget
 	////////////////GUN////////////////
 	Render::Texture* gunTex;
 	Render::Texture* aimTex;
-	Render::Texture* bulletTex;
-	ParticleEffectPtr bulletTrail;
+	Render::Texture* bulletTex;	
 
 	std::set<Bullet*> bullets;
 	
@@ -106,9 +105,17 @@ class GameWidget : public GUI::Widget
 	float bulletStartSpeed;
 	float bulletCurrentSpeed;
 
-	//Delegate<int> destroyBulletDelegate;
 	
 	
+	///////////////////////////////////////////PARTICLES//////////////////////////////////////////
+
+	EffectsContainer effCont;
+	ParticleEffectPtr trailEff;
+	ParticleEffectPtr hitEff;
+	ParticleEffectPtr destroyEff;
+	
+	Delegate<FPoint> destroySporeDelegate;
+	Delegate<FPoint> hitSporeDelegate;
 
 public:
 	GameWidget(const std::string& name, rapidxml::xml_node<>* elem);
@@ -124,9 +131,7 @@ public:
 
 	void KeyPressed(int keyCode) override;
 	void CharPressed(int unicodeChar) override;
-
-	//void DestroyBullet(const void* pSender, int& bulletId);
-
+	
 private:
 	void Init();
 
@@ -148,6 +153,7 @@ private:
 	
 	void DrawSpores();
 	void UpdateSpores(float dt);
+	void DeleteSpore(size_t sporeId);
 
 	void DrawAim();
 	
@@ -160,5 +166,7 @@ private:
 
 	void ShootGunMask();
 
-	
+	void HitSpore(const void* pSender, FPoint& position);
+
+	void DestroySpore(const void* pSender, FPoint& position);
 };

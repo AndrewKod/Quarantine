@@ -203,7 +203,7 @@ bool TestWidget::MouseDown(const IPoint &mouse_pos)
 		//
 		// При нажатии на правую кнопку мыши, создаём эффект шлейфа за мышкой.
 		//
-		_eff = _effCont.AddEffect("Iskra");
+		_eff = _effCont.AddEffect("Iskra2");
 		_eff->posX = mouse_pos.x + 0.f;
 		_eff->posY = mouse_pos.y + 0.f;
 		_eff->Reset();
@@ -222,7 +222,7 @@ bool TestWidget::MouseDown(const IPoint &mouse_pos)
 		//
 		// При нажатии на левую кнопку мыши, создаём временный эффект, который завершится сам.
 		//
-		ParticleEffectPtr eff = _effCont.AddEffect("FindItem2");
+		ParticleEffectPtr eff = _effCont.AddEffect("FindCoin2");
 		eff->posX = mouse_pos.x + 0.f;
 		eff->posY = mouse_pos.y + 0.f;
 		eff->Reset();

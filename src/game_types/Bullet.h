@@ -36,9 +36,7 @@ class Bullet
 
 	//grid cell coords
 	//updating every frame
-	IPoint cellId;	
-
-	ParticleEffectPtr trailEff;
+	IPoint cellId;		
 
 	int maxRicochets;
 	int currRicochets;
@@ -58,7 +56,6 @@ public:
 	//Also trajectorySpline have to be periodic
 	Bullet(int bulletId,
 		Render::Texture* bulletTex, 		
-		ParticleEffectPtr trailEff, 
 		float speed,
 		FRect screenBounds,
 		float startAngle,
@@ -70,10 +67,13 @@ public:
 
 	IRect GetBitmapRect()		{ return this->bulletTex->getBitmapRect(); }
 	FPoint GetCurrentPosition() { return this->currentPosition; }
+	FPoint GetCenterOffset()	{ return this->centerOffset; }
 	IPoint GetCellId()			{ return this->cellId; }
 	bool WantsDestroy()			{ return this->bWantsDestroy; }
 
 	void SetCellId(IPoint cellId) { this->cellId = cellId; }	
+
+	float GetBulletDirection(bool& bSuccess);
 
 	void Destroy();
 

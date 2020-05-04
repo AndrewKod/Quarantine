@@ -28,6 +28,6 @@ public:
 
 	void SetMaxSporeCount(int maxSporeCount) { this->maxSporeCount = maxSporeCount; }
 
-	void AddSpores(int count);
-	void SubtractSpores(int count);
+	void AddSpores(int count = 1);
+	void SubtractSpores(int count = 1);
 };
