@@ -52,7 +52,7 @@ public:
 
 	virtual void Update(float dt);
 
-	virtual void ApplyDamage(int dmgPoints);
+	virtual void ApplyDamage(int dmgPoints = 1);
 
 	virtual void Destroy();
 

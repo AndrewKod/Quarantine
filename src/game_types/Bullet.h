@@ -26,13 +26,18 @@ class Bullet
 	float splineSpeedCoef;
 
 	//using to control time between trajectorySpline keys in trajectorySpline generation
-	float timeMultiplyer;
+	float timeMultiplier;
+
 
 
 	//updating every frame
 	FPoint currentPosition;	
 	FPoint drawPosition;
 	FPoint centerOffset;
+
+	//Particles
+	EffectsContainer effCont;
+	ParticleEffectPtr trailEff;
 
 	//grid cell coords
 	//updating every frame
@@ -52,8 +57,6 @@ public:
 	Bullet();
 
 	//bulletTex have to have equal width and height
-	//Start point of trajectorySpline have to be (0;0) for easy spline transformations
-	//Also trajectorySpline have to be periodic
 	Bullet(int bulletId,
 		Render::Texture* bulletTex, 		
 		float speed,
@@ -61,6 +64,8 @@ public:
 		float startAngle,
 		FPoint startPoint	
 	);	
+
+	~Bullet();
 
 	void Draw();
 	void Update(float dt);

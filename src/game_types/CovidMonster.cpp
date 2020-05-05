@@ -1,5 +1,6 @@
 #include "stdafx.h"
 #include "CovidMonster.h"
+#include "Bullet.h"
 
 CovidMonster::CovidMonster(Render::Texture * targetTex, Render::Texture * healthSegmentTex, Render::Texture * healthSegmentDmgTex,
 	int healthSegmentSpace, int maxHealth,
@@ -35,8 +36,48 @@ void CovidMonster::ApplyDamage(int dmgPoints)
 
 		if (this->currHealth <= 0)
 			this->Destroy();
+		else
+			this->Hit();
 	}
 }
+
+//void CovidMonster::Destroy()
+//{
+//	this->bWantsDestroy = true;
+//	this->OnDestroy.Invoke(this, this->currentPosition +
+//		FPoint(this->targetTex->getBitmapRect().Width() / 2, this->targetTex->getBitmapRect().Height() / 2));
+//}
+//
+//void CovidMonster::Hit()
+//{
+//	this->OnHit.Invoke(this, this->currentPosition +
+//		FPoint(this->targetTex->getBitmapRect().Width() / 2, this->targetTex->getBitmapRect().Height() / 2));
+//}
+
+
+bool CovidMonster::CheckBulletCollision(Bullet * bullet)
+{
+	FRect collisionRect(this->currentPosition.x, this->currentPosition.x + this->GetBitmapRect().Width(),
+				  this->currentPosition.y, this->currentPosition.y + this->GetBitmapRect().Height());
+
+	collisionRect.Inflate(bullet->GetCenterOffset().x);
+	collisionRect.xEnd += 1.f;
+	collisionRect.yStart -= 1.f;
+	
+	if (collisionRect.Contains(bullet->GetCurrentPosition()))
+	{
+		this->ApplyDamage();
+
+		//destroying bullet
+		bullet->Destroy();
+	}
+
+	return false;
+}
+
+
+
+
 
 void CovidMonster::Heal(int healPoints)
 {

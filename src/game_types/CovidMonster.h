@@ -18,7 +18,13 @@ public:
 
 	void Draw() override;
 
-	void ApplyDamage(int dmgPoints) override;
+	void ApplyDamage(int dmgPoints = 1) override;
+
+	/*void Destroy() override;
+
+	void Hit() override;*/
+
+	bool CheckBulletCollision(Bullet* bullet) override;
 
 	//CovidMonster heals itself if visitor infected
 	void Heal(int healPoints);

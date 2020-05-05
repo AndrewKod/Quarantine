@@ -15,7 +15,7 @@ Bullet::Bullet(int bulletId, Render::Texture * bulletTex, float speed,
 	this->bulletTex = bulletTex;	
 	this->speed = speed;	
 	this->splineSpeedCoef = 2.f;
-	this->timeMultiplyer = 1.f / 25.f;
+	this->timeMultiplier = 1.f / 25.f;
 	this->screenBounds = screenBounds;
 	this->centerOffset = FPoint(bulletTex->getBitmapRect().Width()/2, bulletTex->getBitmapRect().Width()/2);
 
@@ -28,9 +28,21 @@ Bullet::Bullet(int bulletId, Render::Texture * bulletTex, float speed,
 	this->bStartsAbroad = true;
 
 	this->bWantsDestroy = false;
+
+	this->trailEff = this->effCont.AddEffect("Iskra");
+	this->trailEff->Reset();
 	
 	CalculateTrajectory(startAngle, this->speed, startPoint);
 	//CalculateTrajectory(90.f, this->speed, startPoint);	
+}
+
+Bullet::~Bullet()
+{
+	if (this->trailEff != nullptr)
+	{
+		this->trailEff->Finish();
+		this->trailEff = nullptr;
+	}
 }
 
 void Bullet::Draw()
@@ -73,6 +85,12 @@ void Bullet::Draw()
 	Render::PrintString(this->currentPosition, utils::lexical_cast(this->bulletId), 2.0f, CenterAlign, TopAlign);
 #endif
 
+	//Updating trail position
+	this->trailEff->posX = this->currentPosition.x;
+	this->trailEff->posY = this->currentPosition.y;
+
+	this->effCont.Draw();
+
 	if (this->bWantsDestroy)
 		this->Destroy();
 }
@@ -81,6 +99,8 @@ void Bullet::Update(float dt)
 {
 	this->timer += dt;
 	this->deltaTime = dt;
+
+	this->effCont.Update(dt);
 }
 
 float Bullet::GetBulletDirection(bool & bSuccess)
@@ -267,7 +287,7 @@ void Bullet::CalculateParabolicTrajectory(float startAngle, float startSpeed, FP
 		FPoint speedPoint(currSpeedX, currSpeedY);
 		float currSpeed = speedPoint.GetDistanceToOrigin();
 
-		splineTime = x / startSpeed / math::cos(startAngleRad) * this->timeMultiplyer;
+		splineTime = x / startSpeed / math::cos(startAngleRad) * this->timeMultiplier;
 		y = CalculateY(x, startSpeed, startAngleRad);
 
 		splinePoint = FPoint(x, y);
@@ -308,7 +328,7 @@ void Bullet::CalculateVerticalTrajectory(float startAngle, float startSpeed, FPo
 		this->speedSpline.addKey(splineTime, math::abs(currSpeed));
 		this->trajectorySpline.addKey(splineTime, splinePoint);
 
-		splineTime += (1.f * this->timeMultiplyer);
+		splineTime += (1.f * this->timeMultiplier);
 		time += 1.f;
 		currSpeed = startSpeed + g * time * (bUpRight ? -1.f : 1.f);
 		dist = startSpeed * time + g * math::sqr(time) / 2 * (bUpRight ? -1.f : 1.f);

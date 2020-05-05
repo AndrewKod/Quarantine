@@ -59,6 +59,7 @@ class GameWidget : public GUI::Widget
 	bool bMonsterAtTheDoor;
 	float covidMonsterEndTime;
 	bool bCanTick;
+	bool bCanGetDmg;
 
 	bool bGameStarted;
 
@@ -111,11 +112,17 @@ class GameWidget : public GUI::Widget
 
 	EffectsContainer effCont;
 	ParticleEffectPtr trailEff;
-	ParticleEffectPtr hitEff;
-	ParticleEffectPtr destroyEff;
+	//ParticleEffectPtr hitEff;
+	//ParticleEffectPtr destroyEff;
 	
 	Delegate<FPoint> destroySporeDelegate;
 	Delegate<FPoint> hitSporeDelegate;
+
+	Delegate<FPoint> destroyMonsterDelegate;
+	Delegate<FPoint> hitMonsterDelegate;
+
+	bool bGameOver;
+	bool bVictory;
 
 public:
 	GameWidget(const std::string& name, rapidxml::xml_node<>* elem);
@@ -143,7 +150,7 @@ private:
 
 	void ConstructSporeGrid();
 
-	void CheckSporeCollision();
+	void CheckCollisions();
 
 	void CheckCoupleSporesCollision(size_t originId, IPoint checkingCellId, std::set<size_t>& checkedSpores, bool& bCollisionFound);
 
@@ -169,4 +176,8 @@ private:
 	void HitSpore(const void* pSender, FPoint& position);
 
 	void DestroySpore(const void* pSender, FPoint& position);
+
+	void HitCovidMonster(const void * pSender, FPoint& position);
+
+	void DestroyCovidMonster(const void * pSender, FPoint& position);
 };

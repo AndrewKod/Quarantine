@@ -38,10 +38,12 @@ void GameWidget::Init()
 
 	this->bCanTick = false;
 
+	this->bCanGetDmg = true;
+
 	this->bGameStarted = false;
 
 	this->sporeSpawnStartDelay = 0.1f;
-	this->sporeSpawnGameDelay = 1.f;
+	this->sporeSpawnGameDelay = 1.3f;
 	this->sporeSpawnTimer = 0.f;
 
 	//Get settings defined in input.txt
@@ -52,7 +54,12 @@ void GameWidget::Init()
 
 	this->UpdateSettings();	
 
+	//create delegates before covidMonster
+	this->destroyMonsterDelegate = Delegate<FPoint>::Create<GameWidget, &GameWidget::DestroyCovidMonster>(this);
+	this->hitMonsterDelegate = Delegate<FPoint>::Create<GameWidget, &GameWidget::HitCovidMonster>(this);
+
 	this->CreateCovidMonster();
+
 
 	this->CreateSporeTemplates();
 
@@ -78,20 +85,23 @@ void GameWidget::Init()
 	this->gunBulletHeight = 40.f;
 	this->gunBulletOffset = this->bulletTex->getBitmapRect().Width() / 2;
 	
-	///////////////////////////////////////////PARTICLES//////////////////////////////////////////
-	
-	this->trailEff = nullptr;
-	this->hitEff = nullptr;
-	this->destroyEff = nullptr;
+	///////////////////////////////////////////PARTICLES//////////////////////////////////////////	
 
 	this->destroySporeDelegate = Delegate<FPoint>::Create<GameWidget, &GameWidget::DestroySpore>(this);
 	this->hitSporeDelegate = Delegate<FPoint>::Create<GameWidget, &GameWidget::HitSpore>(this);
 
+	
+
+
+	this->bGameOver = false;
+	this->bVictory = false;
 }
 
 void GameWidget::Draw()
 {
 	this->wallTex->Draw();
+
+	this->effCont.Draw();
 
 	//Draw opened/closed door
 	Render::device.PushMatrix();
@@ -100,7 +110,8 @@ void GameWidget::Draw()
 	Render::device.PopMatrix();	
 
 
-	
+	if (this->bGameOver)
+		return;
 
 	if (this->bCanTick)
 	{
@@ -146,13 +157,16 @@ void GameWidget::Draw()
 
 	this->DrawAim();
 
-	this->DrawGun();
-
-	this->effCont.Draw();
+	this->DrawGun();	
 }
 
 void GameWidget::Update(float dt)
 {
+	this->effCont.Update(dt);
+
+	if (this->bGameOver)
+		return;
+
 	if(this->bCanTick)
 		this->_timer += dt;
 	else if (this->bGameStarted)
@@ -166,11 +180,14 @@ void GameWidget::Update(float dt)
 		this->UpdateSpores(dt);
 	}
 
-	this->effCont.Update(dt);
+	
 }
 
 bool GameWidget::MouseDown(const IPoint &mouse_pos)
 {
+	if (this->bGameOver)
+		return false;
+
 	if (Core::mainInput.GetMouseLeftButton())
 	{
 		if(this->sporeScreenBounds.Contains(mouse_pos))
@@ -274,6 +291,9 @@ void GameWidget::CreateCovidMonster()
 		Core::resourceManager.Get<Render::Texture>("health_fragment_vertical_blue"),
 		Core::resourceManager.Get<Render::Texture>("health_fragment_vertical_red"),
 		2, 20, monsterTrajectory, splineEndTime, 5.f, this->maxSporeCount);
+
+	this->covidMonster->OnHit += this->hitMonsterDelegate;
+	this->covidMonster->OnDestroy += this->destroyMonsterDelegate;
 }
 
 void GameWidget::TryAddCovidSpore(int templateId, FPoint startPoint, float startAngle)
@@ -295,7 +315,7 @@ void GameWidget::TryAddCovidSpore(int templateId, FPoint startPoint, float start
 			startPoint, startAngle, sporeTemplate.splineStartAngle);
 
 			newSpore->OnHit += this->hitSporeDelegate;
-			newSpore->OnDestroy+= this->destroySporeDelegate;
+			newSpore->OnDestroy += this->destroySporeDelegate;
 
 			this->covidSpores.push_back(newSpore);	
 
@@ -389,8 +409,22 @@ void GameWidget::ConstructSporeGrid()
 //Then screen collision tests performing
 //And after - collision with other spores
 //If spore collides with something - the other collision tests will not performing at current frame
-void GameWidget::CheckSporeCollision()
+void GameWidget::CheckCollisions()
 {
+	this->bCanGetDmg = true;
+	//Check bullets collision with covidMonster
+	if (this->covidMonster->GetSporeCount() == 0)
+	{
+		for (Bullet* bullet : this->bullets)
+		{
+			if (this->covidMonster->CheckBulletCollision(bullet))
+			{
+				this->bCanGetDmg = false;
+			}
+		}
+		return;
+	}
+
 	std::set<size_t> checkedSpores;
 	std::set<size_t>::iterator foundCheckedId;	
 	//Check Bullet collision
@@ -594,9 +628,9 @@ void GameWidget::DrawSpores()
 		}
 	}
 
-	this->CheckSporeCollision();
+	this->CheckCollisions();
 
-	if (this->sporeSpawnTimer >= this->sporeSpawnGameDelay)
+	if (!this->bGameOver && this->sporeSpawnTimer >= this->sporeSpawnGameDelay)
 	{
 		this->sporeSpawnTimer = 0.f;
 		//Spawning Spores
@@ -744,7 +778,7 @@ void GameWidget::ShootGunMask()
 
 void GameWidget::HitSpore(const void * pSender, FPoint & position)
 {
-	ParticleEffectPtr eff = effCont.AddEffect("FindCoin2");
+	ParticleEffectPtr eff = effCont.AddEffect("Hit");
 	eff->posX = position.x;
 	eff->posY = position.y;
 	eff->Reset();
@@ -752,8 +786,34 @@ void GameWidget::HitSpore(const void * pSender, FPoint & position)
 
 void GameWidget::DestroySpore(const void * pSender, FPoint & position)
 {
-
+	ParticleEffectPtr eff = effCont.AddEffect("Explosion");
+	eff->posX = position.x;
+	eff->posY = position.y;
+	eff->Reset();
 }
 
+void GameWidget::HitCovidMonster(const void * pSender, FPoint & position)
+{
+	if (this->bCanGetDmg)
+	{
+		ParticleEffectPtr eff = effCont.AddEffect("BigHit");
+		eff->posX = position.x;
+		eff->posY = position.y;
+		eff->Reset();
+
+		this->bCanGetDmg = false;
+	}
+}
+
+void GameWidget::DestroyCovidMonster(const void * pSender, FPoint & position)
+{
+	ParticleEffectPtr eff = effCont.AddEffect("BigExplosion");
+	eff->posX = position.x;
+	eff->posY = position.y;
+	eff->Reset();
+
+	this->bGameOver = true;
+	this->bVictory = true;
+}
 
 
