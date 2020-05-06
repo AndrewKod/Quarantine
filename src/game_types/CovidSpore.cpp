@@ -83,7 +83,8 @@ void CovidSpore::Update(float dt)
 		{
 			this->bAtacking = false;
 			this->trajectoryStart = this->atackSpline.GetKey(this->atackSpline.GetKeysCount() - 1);
-			this->trajectoryGlobalAngle = (this->atackSpline.GetKey(0) - this->trajectoryStart).GetAngle();
+			this->trajectoryGlobalAngle = (this->trajectoryStart - this->atackSpline.GetKey(0)).GetAngle();
+			Utilities::CorrectingAngle(this->trajectoryGlobalAngle);
 		}
 
 		RestartSplineAnimation();
@@ -239,6 +240,25 @@ bool CovidSpore::CheckBulletCollision(Bullet* bullet)
 	return false;
 }
 
+bool CovidSpore::CheckVisitorCollision(FRect collideArea)
+{
+	if (collideArea.Contains(this->centerPosition))
+	{
+		Layer* outdoorLayer = Core::guiManager.getLayer("OutdoorLayer");
+		if (outdoorLayer != nullptr)
+		{
+			Message mess("GameWidget", "infect_visitor");
+			outdoorLayer->BroadcastMessage(mess);
+			
+			this->bWantsDestroy = true;
+
+			return true;
+		}		
+	}
+
+	return false;
+}
+
 void CovidSpore::CalculateCurrentPosition()
 {
 	float splineTime = this->timer / this->speedCoef;
@@ -313,6 +333,8 @@ void CovidSpore::AtackVisitor(FPoint targetPoint)
 
 	this->bAtacking = true;
 
+	const int divider = 5;
+
 	const float commonDist = Render::device.Width();
 
 	float distStep = commonDist / 5;
@@ -321,26 +343,25 @@ void CovidSpore::AtackVisitor(FPoint targetPoint)
 	float endDist = this->currentPosition.GetDistanceTo(targetPoint);
 	float endTime = this->atackCommonTime * (endDist / commonDist);
 
-	float dX = targetPoint.x - this->currentPosition.x;
-	float dY = targetPoint.y - this->currentPosition.y;
+	float dX = (targetPoint.x - this->currentPosition.x) / divider;
+	float dY = (targetPoint.y - this->currentPosition.y) / divider;
+	float dT = endTime / divider;
 
-	float currDist = 0.f;
 	float currTime = 0.f;
 
 	this->atackSpline.Clear();
 	int count = 0;
 
-	while (currDist < endDist)
+	while (count <= divider)
 	{
 		this->atackSpline.addKey(currTime, FPoint(this->currentPosition.x + dX * count, this->currentPosition.y + dY * count));
-
-		currDist += distStep;
-		currTime += timeStep;
+		
+		currTime += dT;
 		count++;
 	}
 
 	//add last point
-	this->atackSpline.addKey(endTime, targetPoint);
+	//this->atackSpline.addKey(endTime, targetPoint);
 
 	this->atackSpline.CalculateGradient();
 }

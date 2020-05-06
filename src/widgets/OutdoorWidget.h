@@ -60,4 +60,7 @@ private:
 
 	float visitDelay;
 	float delayTimer;
+
+	bool bInfected;
+	bool bMasked;
 };

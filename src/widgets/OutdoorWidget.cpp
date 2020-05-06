@@ -89,6 +89,9 @@ void OutdoorWidget::Init()
 	this->bComingFinished = false;
 	this->bAtTheDoorFinished = false;
 	this->bLeaveFinished = false;
+
+	this->bInfected = false;
+	this->bMasked = false;
 }
 
 void OutdoorWidget::Draw()
@@ -220,6 +223,22 @@ void OutdoorWidget::AcceptMessage(const Message& message)
 
 		this->currVisitorId = math::random(this->visitors.size() - 1);
 		this->currVisitorTex = this->visitors[this->currVisitorId];
+	}
+	else if (publisher == "GameWidget" && data == "infect_visitor")
+	{
+		if (!this->bMasked)
+		{
+			this->bInfected = true;
+			this->currVisitorTex = this->visitorsInfected[this->currVisitorId];
+		}
+	}
+	else if (publisher == "GameWidget" && data == "mask_visitor")
+	{
+		if (!this->bInfected)
+		{
+			this->bMasked = true;
+			this->currVisitorTex = this->visitorsMasked[this->currVisitorId];
+		}
 	}
 }
 

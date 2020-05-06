@@ -86,6 +86,8 @@ public:
 	//returns true if spore collides bullet
 	bool CheckBulletCollision(Bullet* bullet) override;
 
+	bool CheckVisitorCollision(FRect collideArea);
+
 protected:
 
 	
