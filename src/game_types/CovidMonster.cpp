@@ -14,21 +14,59 @@ CovidMonster::CovidMonster(Render::Texture * targetTex, Render::Texture * health
 	this->minAlpha = 0.5f;
 
 	this->sporeCount = 0;
-	this->maxSporeCount = maxSporeCount;
+
+	//temp for tests
+	this->maxSporeCount = 1/*maxSporeCount*/;
+	//temp for tests
+
+	this->bCanInviteVisitor = false;
+	this->inviteDelay = 15.f;
+	this->inviteTimer = 0.f;
+	this->healPoints = 3;
+
+	this->bInvincible = true;
 }
 
 void CovidMonster::Draw()
 {	
+	//temp for tests
+	this->bInvincible = false;
+	//temp for tests
+
 	this->drawAlpha = this->minAlpha + (1.f - this->minAlpha)*((float)this->currHealth / (float)this->maxHealth);
  	Render::BeginAlphaMul(this->drawAlpha);
 	Target::Draw();
 	Render::EndAlphaMul();
 }
 
+void CovidMonster::Update(float dt)
+{
+	//temp for tests
+	this->bInvincible = false;
+	this->bCanInviteVisitor = true;
+	//temp for tests
+
+	Target::Update(dt);
+	this->inviteTimer += dt;
+	if ( this->inviteTimer >= this->inviteDelay)
+	{
+		this->inviteTimer = 0.f;
+		if (this->bCanInviteVisitor)
+		{
+			Layer* outdoorLayer = Core::guiManager.getLayer("OutdoorLayer");
+			if (outdoorLayer != nullptr)
+			{
+				Message mess("GameWidget", "invite_visitor");
+				outdoorLayer->BroadcastMessage(mess);
+			}
+		}
+	}
+}
+
 void CovidMonster::ApplyDamage(int dmgPoints)
 {
 	//CovidMonster become invulnerable while spores aren't destroyed
-	if (this->currHealth > 0 && this->sporeCount == 0)
+	if (!this->bInvincible && this->currHealth > 0 && this->sporeCount == 0)
 	{
 		this->currHealth -= dmgPoints;
 
@@ -41,18 +79,7 @@ void CovidMonster::ApplyDamage(int dmgPoints)
 	}
 }
 
-//void CovidMonster::Destroy()
-//{
-//	this->bWantsDestroy = true;
-//	this->OnDestroy.Invoke(this, this->currentPosition +
-//		FPoint(this->targetTex->getBitmapRect().Width() / 2, this->targetTex->getBitmapRect().Height() / 2));
-//}
-//
-//void CovidMonster::Hit()
-//{
-//	this->OnHit.Invoke(this, this->currentPosition +
-//		FPoint(this->targetTex->getBitmapRect().Width() / 2, this->targetTex->getBitmapRect().Height() / 2));
-//}
+
 
 
 bool CovidMonster::CheckBulletCollision(Bullet * bullet)
@@ -65,11 +92,13 @@ bool CovidMonster::CheckBulletCollision(Bullet * bullet)
 	collisionRect.yStart -= 1.f;
 	
 	if (collisionRect.Contains(bullet->GetCurrentPosition()))
-	{
+	{		
 		this->ApplyDamage();
 
 		//destroying bullet
 		bullet->Destroy();
+
+		return true;
 	}
 
 	return false;
@@ -79,9 +108,10 @@ bool CovidMonster::CheckBulletCollision(Bullet * bullet)
 
 
 
-void CovidMonster::Heal(int healPoints)
+void CovidMonster::Heal()
 {
-	this->currHealth += healPoints;
+	this->currHealth += this->healPoints;
+	this->CheckHealth();
 	if (this->currHealth > this->maxHealth)
 		this->currHealth = this->maxHealth;
 }
@@ -89,6 +119,7 @@ void CovidMonster::Heal(int healPoints)
 void CovidMonster::AddSpores(int count)
 {
 	this->sporeCount += count;
+	this->bInvincible = true;
 	if (this->sporeCount > this->maxSporeCount)
 		this->sporeCount = this->maxSporeCount;
 }
@@ -96,6 +127,17 @@ void CovidMonster::AddSpores(int count)
 void CovidMonster::SubtractSpores(int count)
 {
 	this->sporeCount -= count;
-	if (this->sporeCount < 0)
+	if (this->sporeCount <= 0)
+	{
+		this->bInvincible = false;
 		this->sporeCount = 0;
+	}
+}
+
+void CovidMonster::CheckHealth()
+{
+	if (this->maxHealth - this->currHealth >= this->healPoints)
+		this->bCanInviteVisitor = true;
+	else
+		this->bCanInviteVisitor = false;
 }

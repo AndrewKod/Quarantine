@@ -27,6 +27,10 @@ class CovidSpore :public Target
 	//updating every frame
 	float deltaTime;
 
+	bool bAtacking;
+	TimedSpline<FPoint> atackSpline;
+	float atackCommonTime;
+
 public:
 
 	//targetTex have to have equal width and height
@@ -35,7 +39,7 @@ public:
 	CovidSpore(Render::Texture* targetTex, Render::Texture* healthSegmentTex, Render::Texture* healthSegmentDmgTex,
 		int healthSegmentSpace, int maxHealth,
 		TimedSpline<FPoint>& trajectorySpline, float splineEndTime, float speedCoef,
-		FPoint	trajectoryStart, float	trajectoryGlobalAngle, float trajectoryStartAngle);
+		FPoint	trajectoryStart, float	trajectoryGlobalAngle, float trajectoryStartAngle, float atackCommonTime);
 
 
 	FPoint GetTrajectoryStart()			{ return this->trajectoryStart; }
@@ -44,12 +48,15 @@ public:
 	IPoint GetCellId()					{ return this->cellId; }
 	//FPoint GetCurrentPosition()			{ return this->currentPosition; }
 	FPoint GetCenterPosition()			{ return this->centerPosition; }
-	FPoint GetCenterOffset()			{ return this->centerOffset; }
-	bool WantsDestroy()					{ return this->bWantsDestroy; }
+	FPoint GetCenterOffset()			{ return this->centerOffset; }	
+	bool GetAtacking()					{ return this->bAtacking; }
+
 
 	void SetTrajectoryStart(FPoint trajectoryStart)				{ this->trajectoryStart = trajectoryStart; }
 	void SetTrajectoryGlobalAngle(float trajectoryGlobalAngle)	{ this->trajectoryGlobalAngle = trajectoryGlobalAngle; }
 	void SetCellId(IPoint cellId)								{ this->cellId = cellId; }
+	
+	void AtackVisitor(FPoint targetPoint);
 
 	float GetSporeDirection(bool& bSuccess);
 
@@ -79,9 +86,13 @@ public:
 	//returns true if spore collides bullet
 	bool CheckBulletCollision(Bullet* bullet) override;
 
+protected:
 
+	
 
 private:
+	
+	void CalculateCurrentPosition();
 
 	//Don't forget to change trajectoryStart and reset timer
 	//before this function call

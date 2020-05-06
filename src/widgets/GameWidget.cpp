@@ -23,6 +23,7 @@ void GameWidget::Init()
 	this->doorOpenedTex = Core::resourceManager.Get<Render::Texture>("opened_door");
 	this->doorClosedTex = Core::resourceManager.Get<Render::Texture>("closed_door");
 	this->bDoorOpened = false;
+	this->doorPos = FPoint(750.f, 142.f);
 
 	this->covidMonsterTex = Core::resourceManager.Get<Render::Texture>("covid_monster");
 	this->bMonsterAtTheDoor = false;
@@ -36,14 +37,13 @@ void GameWidget::Init()
 
 	this->covidMonsterEndTime = 1.0f;
 
-	this->bCanTick = false;
-
-	this->bCanGetDmg = true;
-
+	this->bCanWalk = false;
+	
 	this->bGameStarted = false;
 
 	this->sporeSpawnStartDelay = 0.1f;
-	this->sporeSpawnGameDelay = 1.3f;
+	this->sporeSpawnGameDelay = 3.f;
+	this->currentSporeSpawnDelay = this->sporeSpawnStartDelay;
 	this->sporeSpawnTimer = 0.f;
 
 	//Get settings defined in input.txt
@@ -60,6 +60,7 @@ void GameWidget::Init()
 
 	this->CreateCovidMonster();
 
+	this->covidSpores.resize(this->covidMonster->GetMaxSporeCount(), nullptr);
 
 	this->CreateSporeTemplates();
 
@@ -105,7 +106,7 @@ void GameWidget::Draw()
 
 	//Draw opened/closed door
 	Render::device.PushMatrix();
-	Render::device.MatrixTranslate(750.f, 142.f, 0);
+	Render::device.MatrixTranslate(this->doorPos);
 	this->bDoorOpened ? this->doorOpenedTex->Draw() : this->doorClosedTex->Draw();
 	Render::device.PopMatrix();	
 
@@ -113,7 +114,7 @@ void GameWidget::Draw()
 	if (this->bGameOver)
 		return;
 
-	if (this->bCanTick)
+	if (this->bCanWalk)
 	{
 		//the larger coef, the slower animation speed
 		float speedCoef = 2.0f;
@@ -124,7 +125,7 @@ void GameWidget::Draw()
 		{
 			splineTime = math::clamp(0.0f, this->covidMonsterEndTime, splineTime);
 			this->_timer = splineTime * speedCoef;
-			this->bCanTick = false;
+			this->bCanWalk = false;
 			this->bGameStarted = true;
 		}
 		FPoint currentPosition = this->covidMonsterSpline.getGlobalFrame(splineTime);
@@ -133,16 +134,14 @@ void GameWidget::Draw()
 		Render::device.MatrixTranslate(currentPosition.x, currentPosition.y, 0);
 		this->covidMonsterTex->Draw();
 		Render::device.PopMatrix();
+				
+		//Spawning Spores
+		FPoint newSporeStartPoint(currentPosition.x + math::random(0, this->covidMonsterTex->getBitmapRect().Width()),
+			currentPosition.y + math::random(0, this->covidMonsterTex->getBitmapRect().Height()));
 
-		if (this->sporeSpawnTimer >= this->sporeSpawnStartDelay)
-		{
-			this->sporeSpawnTimer = 0.f;
-			//Spawning Spores
-			FPoint newSporeStartPoint(currentPosition.x + math::random(0, this->covidMonsterTex->getBitmapRect().Width()),
-				currentPosition.y + math::random(0, this->covidMonsterTex->getBitmapRect().Height()));
-
-			this->TryAddRandomSpore(newSporeStartPoint);
-		}
+		this->TryAddRandomSpore(newSporeStartPoint);
+		
+		
 		this->DrawSpores();
 	}
 
@@ -167,14 +166,14 @@ void GameWidget::Update(float dt)
 	if (this->bGameOver)
 		return;
 
-	if(this->bCanTick)
+	if(this->bCanWalk)
 		this->_timer += dt;
 	else if (this->bGameStarted)
 	{
 		this->covidMonster->Update(dt);		
 		this->UpdateBullets(dt);
 	}
-	if (this->bCanTick || this->bGameStarted)
+	if (this->bCanWalk || this->bGameStarted)
 	{
 		this->sporeSpawnTimer += dt;
 		this->UpdateSpores(dt);
@@ -221,14 +220,19 @@ void GameWidget::AcceptMessage(const Message& message)
 	const std::string& data = message.getData();
 
 	if (publisher == "OutdoorWidget" && data=="bDoorOpened")
-	{
+	{				
 		this->bDoorOpened = message.getIntegerParam();
+
+		if (this->bGameStarted && this->bDoorOpened)
+		{
+			this->AtackVisitor();
+		}
 	}
 	else if (publisher == "OutdoorWidget" && data == "bMonsterAtTheDoor")
 	{
 		this->bDoorOpened = false;
 		this->_timer = 0;
-		this->bCanTick = true;
+		this->bCanWalk = true;
 	}	
 	else if (publisher == "MainLayer" && data == "UpdateSettings")
 	{
@@ -296,6 +300,7 @@ void GameWidget::CreateCovidMonster()
 	this->covidMonster->OnDestroy += this->destroyMonsterDelegate;
 }
 
+
 void GameWidget::TryAddCovidSpore(int templateId, FPoint startPoint, float startAngle)
 {
 	if (templateId >= 0 && templateId < this->covidSporeTemplates.size())
@@ -304,70 +309,60 @@ void GameWidget::TryAddCovidSpore(int templateId, FPoint startPoint, float start
 
 		float sporeSpeedCoef = this->speedCoef / this->gameSpeed;
 
-		
-
-		if (this->covidSpores.size() < this->covidMonster->GetMaxSporeCount())
+		for (size_t sporeId = 0; sporeId < this->covidSpores.size(); sporeId++)
 		{
-			CovidSpore* newSpore = new CovidSpore(sporeTemplate.covidSporeTexture,
-			Core::resourceManager.Get<Render::Texture>("health_fragment_horizontal_blue"),
-			Core::resourceManager.Get<Render::Texture>("health_fragment_horizontal_red"),
-			2, sporeTemplate.maxHealth, sporeTemplate.sporeSpline, sporeTemplate.splineEndTime, sporeSpeedCoef,
-			startPoint, startAngle, sporeTemplate.splineStartAngle);
-
-			newSpore->OnHit += this->hitSporeDelegate;
-			newSpore->OnDestroy += this->destroySporeDelegate;
-
-			this->covidSpores.push_back(newSpore);	
-
-			this->covidMonster->AddSpores();		
-		}
-		else if (this->covidSpores.size() == this->covidMonster->GetMaxSporeCount())
-		{
-			for (size_t sporeId = 0; sporeId < this->covidSpores.size(); sporeId++)
+			if (this->covidSpores[sporeId] == nullptr)
 			{
-				if (this->covidSpores[sporeId] == nullptr)
-				{
-					CovidSpore* newSpore = new CovidSpore(sporeTemplate.covidSporeTexture,
-						Core::resourceManager.Get<Render::Texture>("health_fragment_horizontal_blue"),
-						Core::resourceManager.Get<Render::Texture>("health_fragment_horizontal_red"),
-						2, sporeTemplate.maxHealth, sporeTemplate.sporeSpline, sporeTemplate.splineEndTime, sporeSpeedCoef,
-						startPoint, startAngle, sporeTemplate.splineStartAngle);
+				CovidSpore* newSpore = new CovidSpore(sporeTemplate.covidSporeTexture,
+					Core::resourceManager.Get<Render::Texture>("health_fragment_horizontal_blue"),
+					Core::resourceManager.Get<Render::Texture>("health_fragment_horizontal_red"),
+					2, sporeTemplate.maxHealth, sporeTemplate.sporeSpline, sporeTemplate.splineEndTime, sporeSpeedCoef,
+					startPoint, startAngle, sporeTemplate.splineStartAngle, sporeTemplate.atackCommonTime);
 
-					newSpore->OnHit += this->hitSporeDelegate;
-					newSpore->OnDestroy += this->destroySporeDelegate;
+				newSpore->OnHit += this->hitSporeDelegate;
+				newSpore->OnDestroy += this->destroySporeDelegate;
 
-					this->covidSpores[sporeId] = newSpore;
+				this->covidSpores[sporeId] = newSpore;
 
-					this->covidMonster->AddSpores();
+				this->covidMonster->AddSpores();
 
-					break;
-				}
+				break;
 			}
-		}		
+		}
 	}
 }
 
 void GameWidget::TryAddRandomSpore(FPoint spawnPoint)
 {
-	FRect newSporeBounds = this->sporeScreenBounds.Inflated(-this->cellSize / 2);
-
-	if (!newSporeBounds.Contains(spawnPoint))
+	if (!this->bGameOver && this->sporeSpawnTimer >= this->currentSporeSpawnDelay)
 	{
-		if (spawnPoint.x > newSporeBounds.xEnd)
-			spawnPoint.x = newSporeBounds.xEnd;
-		else if (spawnPoint.x < newSporeBounds.xStart)
-			spawnPoint.x = newSporeBounds.xStart;
-		if (spawnPoint.y > newSporeBounds.yEnd)
-			spawnPoint.y = newSporeBounds.yEnd;
-		else if (spawnPoint.y < newSporeBounds.yStart)
-			spawnPoint.y = newSporeBounds.yStart;
+		if (this->covidMonster != nullptr && this->covidMonster->GetSporeCount() == 0)
+			this->currentSporeSpawnDelay = this->sporeSpawnStartDelay;
+		else if (this->covidMonster != nullptr && this->covidMonster->GetSporeCount() >= this->covidMonster->GetMaxSporeCount())
+			this->currentSporeSpawnDelay = this->sporeSpawnGameDelay;
+
+		this->sporeSpawnTimer = 0.f;
+
+		FRect newSporeBounds = this->sporeScreenBounds.Inflated(-this->cellSize / 2);
+
+		if (!newSporeBounds.Contains(spawnPoint))
+		{
+			if (spawnPoint.x > newSporeBounds.xEnd)
+				spawnPoint.x = newSporeBounds.xEnd;
+			else if (spawnPoint.x < newSporeBounds.xStart)
+				spawnPoint.x = newSporeBounds.xStart;
+			if (spawnPoint.y > newSporeBounds.yEnd)
+				spawnPoint.y = newSporeBounds.yEnd;
+			else if (spawnPoint.y < newSporeBounds.yStart)
+				spawnPoint.y = newSporeBounds.yStart;
+		}
+
+		float newSporeAngle = math::random(0.f, 359.9f);
+
+		int newSporeTemplateId = math::random(size_t(0), this->covidSporeTemplates.size() - 1);
+
+		TryAddCovidSpore(newSporeTemplateId, spawnPoint, newSporeAngle);
 	}
-
-	float newSporeAngle = math::random(0.f, 359.9f);
-
-	int newSporeTemplateId = math::random(size_t(0), this->covidSporeTemplates.size() - 1);
-
-	TryAddCovidSpore(newSporeTemplateId, spawnPoint, newSporeAngle);
 }
 
 void GameWidget::ConstructSporeGrid()
@@ -410,20 +405,30 @@ void GameWidget::ConstructSporeGrid()
 //And after - collision with other spores
 //If spore collides with something - the other collision tests will not performing at current frame
 void GameWidget::CheckCollisions()
-{
-	this->bCanGetDmg = true;
+{	
 	//Check bullets collision with covidMonster
-	if (this->covidMonster->GetSporeCount() == 0)
+	if (this->covidMonster!=nullptr && this->covidMonster->GetSporeCount() == 0)
 	{
+		
 		for (Bullet* bullet : this->bullets)
 		{
-			if (this->covidMonster->CheckBulletCollision(bullet))
+			if (this->covidMonster != nullptr && this->covidMonster->CheckBulletCollision(bullet))
 			{
-				this->bCanGetDmg = false;
+				//covidMonster can get only one damage point after all spores destroyed
+				this->covidMonster->SetInvincible();
+				//and spawns new swarm of spores
+				this->currentSporeSpawnDelay = this->sporeSpawnStartDelay;
 			}
+		}		
+
+		if (this->covidMonster->WantsDestroy())
+		{
+			delete this->covidMonster;
+			this->covidMonster = nullptr;
 		}
 		return;
 	}
+	
 
 	std::set<size_t> checkedSpores;
 	std::set<size_t>::iterator foundCheckedId;	
@@ -552,7 +557,7 @@ void GameWidget::CreateSporeTemplates()
 	float splineStartAngle0 = sporeTrajectory0.getGlobalFrame(0.01).GetAngle() * 180 / math::PI;
 
 	SporeTemplate template0(Core::resourceManager.Get<Render::Texture>("virus_red_small"), 3,
-		sporeTrajectory0, splineEndTime0, splineStartAngle0, 50);
+		sporeTrajectory0, splineEndTime0, splineStartAngle0, 50, 1.f);
 	
 	
 
@@ -565,10 +570,10 @@ void GameWidget::CreateSporeTemplates()
 	sporeTrajectory1.CalculateGradient();
 	float splineEndTime1 = 0.4f;
 
-	float splineStartAngle1 = sporeTrajectory1.getGlobalFrame(0.01).GetAngle() * 180 / math::PI;
+	float splineStartAngle1 = sporeTrajectory1.getGlobalFrame(0.01).GetAngle() * 180 / math::PI;	
 
 	SporeTemplate template1(Core::resourceManager.Get<Render::Texture>("virus_blue_small"), 2,
-		sporeTrajectory1, splineEndTime1, splineStartAngle1, 100);
+		sporeTrajectory1, splineEndTime1, splineStartAngle1, 100, 0.5f);
 
 	this->covidSporeTemplates.push_back(template0);
 	this->covidSporeTemplates.push_back(template1);
@@ -617,23 +622,24 @@ void GameWidget::DrawSpores()
 		FPoint centerPos = this->covidSpores[i]->GetCenterPosition();
 		IPoint newCell(centerPos.x / this->cellSize, centerPos.y / this->cellSize);
 
-		if (newCell != oldCell)
+		if (newCell.x >= 0 && newCell.y >= 0 && newCell.x < this->gridSize.x&&newCell.y < this->gridSize.y)
 		{
-			if (oldCell.x != -1)
+			if (newCell != oldCell)
 			{
-				this->sporeGrid[oldCell.y][oldCell.x].sporeIds.erase(i);
+				if (oldCell.x != -1)
+				{
+					this->sporeGrid[oldCell.y][oldCell.x].sporeIds.erase(i);
+				}
+				this->sporeGrid[newCell.y][newCell.x].sporeIds.insert(i);
+				this->covidSpores[i]->SetCellId(newCell);
 			}
-			this->sporeGrid[newCell.y][newCell.x].sporeIds.insert(i);
-			this->covidSpores[i]->SetCellId(newCell);
 		}
 	}
 
-	this->CheckCollisions();
+	this->CheckCollisions();	
 
-	if (!this->bGameOver && this->sporeSpawnTimer >= this->sporeSpawnGameDelay)
+	if (this->covidMonster != nullptr)
 	{
-		this->sporeSpawnTimer = 0.f;
-		//Spawning Spores
 		FPoint newSporeStartPoint(this->covidMonster->GetCurrentPosition().x + math::random(0, this->covidMonster->GetBitmapRect().Width()),
 			this->covidMonster->GetCurrentPosition().y + math::random(0, this->covidMonster->GetBitmapRect().Height()));
 
@@ -793,16 +799,11 @@ void GameWidget::DestroySpore(const void * pSender, FPoint & position)
 }
 
 void GameWidget::HitCovidMonster(const void * pSender, FPoint & position)
-{
-	if (this->bCanGetDmg)
-	{
-		ParticleEffectPtr eff = effCont.AddEffect("BigHit");
-		eff->posX = position.x;
-		eff->posY = position.y;
-		eff->Reset();
-
-		this->bCanGetDmg = false;
-	}
+{	
+	ParticleEffectPtr eff = effCont.AddEffect("BigHit");
+	eff->posX = position.x;
+	eff->posY = position.y;
+	eff->Reset();
 }
 
 void GameWidget::DestroyCovidMonster(const void * pSender, FPoint & position)
@@ -813,7 +814,21 @@ void GameWidget::DestroyCovidMonster(const void * pSender, FPoint & position)
 	eff->Reset();
 
 	this->bGameOver = true;
-	this->bVictory = true;
+	this->bVictory = true;		
+}
+
+void GameWidget::AtackVisitor()
+{
+	FPoint atackPoint(this->doorPos.x + this->doorClosedTex->getBitmapRect().Width() / 2,
+					  this->doorPos.y + this->doorClosedTex->getBitmapRect().Height() / 2);
+
+	for (size_t sporeId = 0; sporeId < this->covidSpores.size(); sporeId++)
+	{
+		if (this->covidSpores[sporeId] == nullptr)
+			continue;
+
+		this->covidSpores[sporeId]->AtackVisitor(atackPoint);
+	}
 }
 
 

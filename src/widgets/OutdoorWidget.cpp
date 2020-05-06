@@ -30,12 +30,20 @@ void OutdoorWidget::Init()
 	this->visitorsMasked.push_back(Core::resourceManager.Get<Render::Texture>("doctor_masked"));
 	this->visitorsMasked.push_back(Core::resourceManager.Get<Render::Texture>("young_man_masked"));
 	this->visitorsMasked.push_back(Core::resourceManager.Get<Render::Texture>("young_woman_masked"));
+
+	this->visitorsMasked.push_back(Core::resourceManager.Get<Render::Texture>("man_infected"));
+	this->visitorsMasked.push_back(Core::resourceManager.Get<Render::Texture>("woman_infected"));
+	this->visitorsMasked.push_back(Core::resourceManager.Get<Render::Texture>("doctor_infected"));
+	this->visitorsMasked.push_back(Core::resourceManager.Get<Render::Texture>("young_man_infected"));
+	this->visitorsMasked.push_back(Core::resourceManager.Get<Render::Texture>("young_woman_infected"));
 	
 	int i = 0;
 	float time = 0.0f;
 	float x = -145.0f;
 	float y = 150.0f;
 
+
+	//Creating splines
 	int segmentsCount = 22;
 	int atTheDoorStart = 10;
 	int leaveStart = 20;
@@ -100,9 +108,7 @@ void OutdoorWidget::Draw()
 		if (!this->bComingFinished)
 		{
 			if (splineTime >= this->atTheDoorStartTime)
-			{
-				splineTime = math::clamp(this->comingStartTime, this->atTheDoorStartTime, splineTime);
-				this->_timer = splineTime * speedCoef;
+			{				
 				this->bComingFinished = true;
 
 				//stop spline animation for covid monster
@@ -118,9 +124,7 @@ void OutdoorWidget::Draw()
 		else if (!this->bAtTheDoorFinished)
 		{
 			if (splineTime >= this->leaveStartTime)
-			{
-				splineTime = math::clamp(this->atTheDoorStartTime, this->leaveStartTime, splineTime);
-				this->_timer = splineTime * speedCoef;
+			{				
 				this->bAtTheDoorFinished = true;
 			}
 			currentPosition = this->visitorAtTheDoorSpline.getGlobalFrame(splineTime);
@@ -129,9 +133,7 @@ void OutdoorWidget::Draw()
 		else if (!this->bLeaveFinished)
 		{
 			if (splineTime >= this->endTime)
-			{
-				splineTime = math::clamp(this->leaveStartTime, this->endTime, splineTime);
-				this->_timer = splineTime * speedCoef;
+			{				
 				this->bLeaveFinished = true;
 				this->bCanTick = false;
 			}
@@ -145,6 +147,7 @@ void OutdoorWidget::Draw()
 		{
 			if (this->bMonsterInvaded && !this->bMonsterMsgSend)
 			{
+				this->bMonsterMsgSend = true;
 				Message mess("OutdoorWidget", "bMonsterAtTheDoor");
 				mainLayer->BroadcastMessage(mess);
 			}
@@ -152,7 +155,7 @@ void OutdoorWidget::Draw()
 			{
 				FRect doorRect(740.f, 850.f, 130.f, 445.f);// door rectangle
 
-				//open/close door on MainLayer
+				//open/close door on MainLayer if visitor at the door
 				Message mess("OutdoorWidget", "bDoorOpened", doorRect.Contains(currentPosition) ? 1 : 0);
 				mainLayer->BroadcastMessage(mess);
 			}
@@ -207,11 +210,16 @@ void OutdoorWidget::AcceptMessage(const Message& message)
 	const std::string& publisher = message.getPublisher();
 	const std::string& data = message.getData();
 
-	if (publisher == "GameWidget" && data == "restart_visitor")
+	if (publisher == "GameWidget" && data == "invite_visitor")
 	{
 		this->_timer = 0.f;
 		this->bCanTick = true;
-		this->currVisitorTex = this->visitors[math::random(this->visitors.size())];
+		this->bComingFinished = false;
+		this->bAtTheDoorFinished = false;
+		this->bLeaveFinished = false;
+
+		this->currVisitorId = math::random(this->visitors.size() - 1);
+		this->currVisitorTex = this->visitors[this->currVisitorId];
 	}
 }
 

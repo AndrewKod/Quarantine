@@ -48,39 +48,9 @@ Target::Target(Render::Texture * targetTex, Render::Texture * healthSegmentTex, 
 
 void Target::Draw()
 {
-	float splineTime = this->timer / this->speedCoef;
+	this->CalculateCurrentPosition();
 
-	if (splineTime >= this->splineEndTime)
-	{
-		//splineTime = math::clamp(0.0f, this->splineEndTime, splineTime);
-		this->timer = 0.f;		
-	}
-	
-	this->currentPosition = this->trajectorySpline.getGlobalFrame(splineTime);
-
-	//Draw targetTex
-	Render::device.PushMatrix();
-	Render::device.MatrixTranslate(this->currentPosition.x, this->currentPosition.y, 0);
-	this->targetTex->Draw();
-	Render::device.PopMatrix();
-	
-	//healthSegment width
-	int healthSegmW = this->healthSegmentTex->Width();
-
-	float posY = this->currentPosition.y + this->healthBarOffset.y;
-	//Draw health bar	
-	for (int i = 0; i < this->maxHealth; i++)
-	{
-		float posX = this->currentPosition.x + this->healthBarOffset.x + healthSegmW * i + this->healthSegmentSpace * i;
-
-		Render::device.PushMatrix();
-		Render::device.MatrixTranslate(posX, posY, 0);
-
-		//draw either normal or damaged healthSegments
-		i < this->currHealth ? this->healthSegmentTex->Draw() : this->healthSegmentDmgTex->Draw();
-
-		Render::device.PopMatrix();
-	}
+	this->DrawTarget();
 }
 
 void Target::Update(float dt)
@@ -116,4 +86,43 @@ void Target::Hit()
 bool Target::CheckBulletCollision(Bullet * bullet)
 {
 	return false;
+}
+
+void Target::CalculateCurrentPosition()
+{
+	float splineTime = this->timer / this->speedCoef;
+
+	if (splineTime >= this->splineEndTime)
+	{
+		this->timer = 0.f;
+	}
+
+	this->currentPosition = this->trajectorySpline.getGlobalFrame(splineTime);
+}
+
+void Target::DrawTarget()
+{
+	//Draw targetTex
+	Render::device.PushMatrix();
+	Render::device.MatrixTranslate(this->currentPosition.x, this->currentPosition.y, 0);
+	this->targetTex->Draw();
+	Render::device.PopMatrix();
+
+	//healthSegment width
+	int healthSegmW = this->healthSegmentTex->Width();
+
+	float posY = this->currentPosition.y + this->healthBarOffset.y;
+	//Draw health bar	
+	for (int i = 0; i < this->maxHealth; i++)
+	{
+		float posX = this->currentPosition.x + this->healthBarOffset.x + healthSegmW * i + this->healthSegmentSpace * i;
+
+		Render::device.PushMatrix();
+		Render::device.MatrixTranslate(posX, posY, 0);
+
+		//draw either normal or damaged healthSegments
+		i < this->currHealth ? this->healthSegmentTex->Draw() : this->healthSegmentDmgTex->Draw();
+
+		Render::device.PopMatrix();
+	}
 }

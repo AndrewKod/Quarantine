@@ -77,6 +77,13 @@
     <texture id="doctor_masked" path="textures/doctor_masked.png" />
     <texture id="young_man_masked" path="textures/young_man_masked.png" />
     <texture id="young_woman_masked" path="textures/young_woman_masked.png" />
+    
+    <!--INFECTED-->
+    <texture id="man_infected" path="textures/man_infected.png" />
+    <texture id="woman_infected" path="textures/woman_infected.png" />
+    <texture id="doctor_infected" path="textures/doctor_infected.png" />
+    <texture id="young_man_infected" path="textures/young_man_infected.png" />
+    <texture id="young_woman_infected" path="textures/young_woman_infected.png" />
 
 
     <!--______________________________________________GUN______________________________________________-->

@@ -62,10 +62,16 @@ public:
 
 	IRect GetBitmapRect()		{ return this->targetTex->getBitmapRect(); }
 	FPoint GetCurrentPosition() { return this->currentPosition; }
+	bool WantsDestroy()			{ return this->bWantsDestroy; }
 
 	void SetSpeedCoef(float speedCoef) { this->speedCoef = speedCoef; }
 
 private:
 
+	void CalculateCurrentPosition();	
+
+protected:
+
+	void DrawTarget();
 
 };

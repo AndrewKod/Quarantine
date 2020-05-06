@@ -7,7 +7,7 @@
 CovidSpore::CovidSpore(Render::Texture * targetTex, Render::Texture * healthSegmentTex, Render::Texture * healthSegmentDmgTex,
 	int healthSegmentSpace, int maxHealth,
 	TimedSpline<FPoint>& trajectorySpline, float splineEndTime, float speedCoef,
-	FPoint trajectoryStart, float trajectoryGlobalAngle, float trajectoryStartAngle)
+	FPoint trajectoryStart, float trajectoryGlobalAngle, float trajectoryStartAngle, float atackCommonTime)
 
 	:Target(targetTex, healthSegmentTex, healthSegmentDmgTex, healthSegmentSpace, maxHealth,
 		trajectorySpline, splineEndTime, speedCoef)
@@ -30,6 +30,10 @@ CovidSpore::CovidSpore(Render::Texture * targetTex, Render::Texture * healthSegm
 	this->cellId = IPoint(-1, -1);
 
 	this->deltaTime = 0.f;
+
+	this->atackCommonTime = atackCommonTime;
+
+	this->bAtacking = false;
 }
 
 float CovidSpore::GetSporeDirection(bool & bSuccess)
@@ -50,7 +54,14 @@ void CovidSpore::RestartSplineAnimation()
 
 void CovidSpore::Draw()
 {
-	Target::Draw();
+	if(!this->bAtacking)
+		Target::Draw();
+	else
+	{
+		this->CalculateCurrentPosition();
+
+		Target::DrawTarget();
+	}
 
 	this->CalcCenterPosition();
 }
@@ -63,8 +74,17 @@ void CovidSpore::Update(float dt)
 	//translating trajectorySpline to its end point and restarting spline animation
 	if (this->timer / this->speedCoef > this->splineEndTime)
 	{		
-		int keysCount = this->trajectorySpline.GetKeysCount();
-		this->trajectoryStart = this->trajectorySpline.GetKey(keysCount - 1);
+		if (!this->bAtacking)
+		{
+			int keysCount = this->trajectorySpline.GetKeysCount();
+			this->trajectoryStart = this->trajectorySpline.GetKey(keysCount - 1);
+		}
+		else
+		{
+			this->bAtacking = false;
+			this->trajectoryStart = this->atackSpline.GetKey(this->atackSpline.GetKeysCount() - 1);
+			this->trajectoryGlobalAngle = (this->atackSpline.GetKey(0) - this->trajectoryStart).GetAngle();
+		}
 
 		RestartSplineAnimation();
 	}
@@ -219,6 +239,18 @@ bool CovidSpore::CheckBulletCollision(Bullet* bullet)
 	return false;
 }
 
+void CovidSpore::CalculateCurrentPosition()
+{
+	float splineTime = this->timer / this->speedCoef;
+
+	if (splineTime > this->splineEndTime)
+	{
+		this->timer = 0.f;		
+	}
+
+	this->currentPosition = this->atackSpline.getGlobalFrame(splineTime);
+}
+
 float CovidSpore::CalcReflectedSplineAngle(float sporeDirectionAngle, float mirrorAngle)
 {	
 	//Reflected trajectory angle
@@ -272,4 +304,43 @@ bool CovidSpore::ValidReflectedAngle(float reflectedAngle, float mirrorAngle)
 		return false;
 
 	return true;
+}
+
+void CovidSpore::AtackVisitor(FPoint targetPoint)
+{
+	if (this->bAtacking)
+		return;
+
+	this->bAtacking = true;
+
+	const float commonDist = Render::device.Width();
+
+	float distStep = commonDist / 5;
+	float timeStep = this->atackCommonTime / 5;
+
+	float endDist = this->currentPosition.GetDistanceTo(targetPoint);
+	float endTime = this->atackCommonTime * (endDist / commonDist);
+
+	float dX = targetPoint.x - this->currentPosition.x;
+	float dY = targetPoint.y - this->currentPosition.y;
+
+	float currDist = 0.f;
+	float currTime = 0.f;
+
+	this->atackSpline.Clear();
+	int count = 0;
+
+	while (currDist < endDist)
+	{
+		this->atackSpline.addKey(currTime, FPoint(this->currentPosition.x + dX * count, this->currentPosition.y + dY * count));
+
+		currDist += distStep;
+		currTime += timeStep;
+		count++;
+	}
+
+	//add last point
+	this->atackSpline.addKey(endTime, targetPoint);
+
+	this->atackSpline.CalculateGradient();
 }

@@ -34,9 +34,11 @@ private:
 	Render::Texture* doorClosedTex;
 
 	Render::Texture* currVisitorTex;
+	size_t currVisitorId;
 
 	std::vector<Render::Texture*> visitors;
 	std::vector<Render::Texture*> visitorsMasked;
+	std::vector<Render::Texture*> visitorsInfected;
 	
 	//Visitors spline animation divided on 3 parts
 	//For covid monster only coming spline using
@@ -55,4 +57,7 @@ private:
 
 	bool bMonsterInvaded;
 	bool bMonsterMsgSend;
+
+	float visitDelay;
+	float delayTimer;
 };

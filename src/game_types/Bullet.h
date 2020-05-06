@@ -37,11 +37,7 @@ class Bullet
 
 	//Particles
 	EffectsContainer effCont;
-	ParticleEffectPtr trailEff;
-
-	//grid cell coords
-	//updating every frame
-	IPoint cellId;		
+	ParticleEffectPtr trailEff;	
 
 	int maxRicochets;
 	int currRicochets;
@@ -73,10 +69,7 @@ public:
 	IRect GetBitmapRect()		{ return this->bulletTex->getBitmapRect(); }
 	FPoint GetCurrentPosition() { return this->currentPosition; }
 	FPoint GetCenterOffset()	{ return this->centerOffset; }
-	IPoint GetCellId()			{ return this->cellId; }
 	bool WantsDestroy()			{ return this->bWantsDestroy; }
-
-	void SetCellId(IPoint cellId) { this->cellId = cellId; }	
 
 	float GetBulletDirection(bool& bSuccess);
 

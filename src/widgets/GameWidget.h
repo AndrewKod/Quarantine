@@ -26,14 +26,17 @@ struct SporeTemplate
 
 	float speed;
 
+	float atackCommonTime;
+
 	SporeTemplate(Render::Texture* covidSporeTexture, int maxHealth, TimedSpline<FPoint> sporeSpline,
-	float splineEndTime, float splineStartAngle, float speed)
+	float splineEndTime, float splineStartAngle, float speed, float atackCommonTime)
 		: covidSporeTexture(covidSporeTexture)
 		, maxHealth(maxHealth)
 		, sporeSpline(sporeSpline)
 		, splineEndTime(splineEndTime)
 		, splineStartAngle(splineStartAngle)
 		, speed(speed)
+		, atackCommonTime(atackCommonTime)
 	{}	
 };
 
@@ -52,24 +55,24 @@ class GameWidget : public GUI::Widget
 	Render::Texture* doorOpenedTex;
 	Render::Texture* doorClosedTex;
 	bool bDoorOpened;
+	FPoint doorPos;
 
 	//texture and spline for covidMonster animation before game start
 	Render::Texture* covidMonsterTex;
 	TimedSpline<FPoint> covidMonsterSpline;
 	bool bMonsterAtTheDoor;
 	float covidMonsterEndTime;
-	bool bCanTick;
-	bool bCanGetDmg;
-
+	bool bCanWalk;
+	
 	bool bGameStarted;
 
-	CovidMonster* covidMonster;
-	
+	CovidMonster* covidMonster;	
 
 	std::vector<CovidSpore*> covidSpores;
 	std::vector<SporeTemplate> covidSporeTemplates;
 	float sporeSpawnStartDelay;
 	float sporeSpawnGameDelay;
+	float currentSporeSpawnDelay;
 	float sporeSpawnTimer;
 
 
@@ -180,4 +183,6 @@ private:
 	void HitCovidMonster(const void * pSender, FPoint& position);
 
 	void DestroyCovidMonster(const void * pSender, FPoint& position);
+
+	void AtackVisitor();
 };
