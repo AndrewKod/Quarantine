@@ -159,7 +159,9 @@ private:
 
 	void CheckSporesAndBulletsCollision(std::set<size_t>& checkedSpores);
 
-	void CheckSporesAndVisitorCollision();
+	void CheckSporesAndVisitorCollision(FRect collideArea);
+
+	void CheckMasksAndVisitorCollision(FRect collideArea);
 
 	void CheckSporesAndScreenCollision(std::set<size_t>& checkedSpores);
 
@@ -182,6 +184,9 @@ private:
 	
 	void DrawBullets();
 	void UpdateBullets(float dt);
+
+	void DrawMasks();
+	void UpdateMasks(float dt);
 
 	void ShootGunBullet();
 

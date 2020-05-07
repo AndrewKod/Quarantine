@@ -76,7 +76,7 @@ public:
 
 	void Destroy();
 
-
+	bool CheckAreaCollision(FRect collideArea);
 
 private:
 

@@ -119,6 +119,24 @@ void Bullet::Destroy()
 	//this->OnDestroy.Invoke(this, this->bulletId);	
 }
 
+bool Bullet::CheckAreaCollision(FRect collideArea)
+{
+	if (collideArea.Contains(this->currentPosition))
+	{
+		Layer* outdoorLayer = Core::guiManager.getLayer("OutdoorLayer");
+		if (outdoorLayer != nullptr)
+		{
+			Message mess("GameWidget", "mask_visitor");
+			outdoorLayer->BroadcastMessage(mess);
+
+			this->bWantsDestroy = true;
+
+			return true;
+		}
+	}
+	return false;
+}
+
 void Bullet::CalculateTrajectory(float startAngle, float startSpeed, FPoint startPoint)
 {
 	bool bPointAbroad = !this->screenBounds.Contains(startPoint);

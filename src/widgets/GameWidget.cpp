@@ -156,6 +156,8 @@ void GameWidget::Draw()
 		this->DrawSpores();
 
 		this->DrawBullets();
+
+		this->DrawMasks();
 	}
 
 	this->DrawAim();
@@ -176,6 +178,7 @@ void GameWidget::Update(float dt)
 	{
 		this->covidMonster->Update(dt);		
 		this->UpdateBullets(dt);
+		this->UpdateMasks(dt);
 	}
 	if (this->bCanWalk || this->bGameStarted)
 	{
@@ -449,7 +452,14 @@ void GameWidget::CheckCollisions()
 	//Check spores collision with visitor if door is opened
 	if (this->bDoorOpened && !this->bMasked && !this->bInfected)
 	{
-		this->CheckSporesAndVisitorCollision();
+		IRect doorRect = this->doorClosedTex->getBitmapRect();
+		FRect collideArea(this->doorPos.x, this->doorPos.x + doorRect.Width(),
+			this->doorPos.y, this->doorPos.y + doorRect.Height());
+		Utilities::SqueezeRectangle(collideArea, 30.f);
+
+		this->CheckSporesAndVisitorCollision(collideArea);
+
+		this->CheckMasksAndVisitorCollision(collideArea);
 
 		//skip all spore collision tests if visitor atacked
 		return;
@@ -514,18 +524,34 @@ void GameWidget::CheckSporesAndBulletsCollision(std::set<size_t>& checkedSpores)
 	}
 }
 
-void GameWidget::CheckSporesAndVisitorCollision()
+void GameWidget::CheckSporesAndVisitorCollision(FRect collideArea)
 {
-	IRect doorRect = this->doorClosedTex->getBitmapRect();
-	FRect collideArea(this->doorPos.x, this->doorPos.x + doorRect.Width(),
-		this->doorPos.y, this->doorPos.y + doorRect.Height());
-	Utilities::SqueezeRectangle(collideArea, 30.f);
-
 	bool bStopAtack = false;
 	for (size_t sporeId = 0; sporeId < this->covidSpores.size(); sporeId++)
 	{
 		if (this->covidSpores[sporeId] != nullptr && this->covidSpores[sporeId]->CheckVisitorCollision(collideArea))
 		{
+			bStopAtack = true;
+			this->bInfected = true;
+			break;
+		}
+	}
+
+	if (this->bAtacking && bStopAtack)
+	{
+		this->bAtacking = false;
+		this->StopAtack();
+	}
+}
+
+void GameWidget::CheckMasksAndVisitorCollision(FRect collideArea)
+{
+	bool bStopAtack = false;
+	for (Bullet* mask:this->masks)
+	{
+		if (mask->CheckAreaCollision(collideArea))
+		{
+			this->bMasked = true;
 			bStopAtack = true;
 			break;
 		}
@@ -831,6 +857,32 @@ void GameWidget::UpdateBullets(float dt)
 	}
 }
 
+void GameWidget::DrawMasks()
+{
+	std::vector<Bullet*> masksToDestroy;
+	for (Bullet* mask : this->masks)
+	{
+		mask->Draw();
+		if (mask->WantsDestroy())
+			masksToDestroy.push_back(mask);
+	}
+
+	for (size_t i = 0; i < masksToDestroy.size(); i++)
+	{
+		this->masks.erase(masksToDestroy[i]);
+		delete masksToDestroy[i];
+		masksToDestroy[i] = nullptr;
+	}
+}
+
+void GameWidget::UpdateMasks(float dt)
+{
+	for (Bullet* mask : this->masks)
+	{
+		mask->Update(dt);
+	}
+}
+
 void GameWidget::ShootGunBullet()
 {
 	if (this->bGameStarted)
@@ -858,7 +910,7 @@ void GameWidget::ShootGunMask()
 		bulletScreenBounds.xEnd += 1.f;
 		bulletScreenBounds.yStart -= 1.f;
 
-		Bullet* mask = new Bullet(this->bullets.size(), this->bulletTex, 135,
+		Bullet* mask = new Bullet(this->bullets.size(), this->maskTex, 135,
 			bulletScreenBounds, this->aimAngle, this->CalculateBulletStartPosition(), 1);
 
 		this->masks.insert(mask);

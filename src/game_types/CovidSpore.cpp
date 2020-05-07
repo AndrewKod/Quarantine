@@ -245,8 +245,7 @@ bool CovidSpore::CheckVisitorCollision(FRect collideArea)
 	if (collideArea.Contains(this->currentPosition))
 	{
 		Layer* outdoorLayer = Core::guiManager.getLayer("OutdoorLayer");
-		Layer* mainLayer = Core::guiManager.getLayer("MainLayer");
-		if (outdoorLayer != nullptr && mainLayer != nullptr)
+		if (outdoorLayer != nullptr)
 		{
 			Message mess("GameWidget", "infect_visitor");
 			outdoorLayer->BroadcastMessage(mess);					
@@ -254,9 +253,7 @@ bool CovidSpore::CheckVisitorCollision(FRect collideArea)
 			this->bWantsDestroy = true;
 
 			return true;
-		}		
-		
-		
+		}				
 	}
 
 	return false;
