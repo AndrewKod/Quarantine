@@ -15,9 +15,9 @@ CovidMonster::CovidMonster(Render::Texture * targetTex, Render::Texture * health
 
 	this->sporeCount = 0;
 
-	//temp for tests
-	this->maxSporeCount = 1/*maxSporeCount*/;
-	//temp for tests
+	
+	this->maxSporeCount = 3/*maxSporeCount*/;
+	
 
 	this->bCanInviteVisitor = false;
 	this->inviteDelay = 15.f;
@@ -29,10 +29,6 @@ CovidMonster::CovidMonster(Render::Texture * targetTex, Render::Texture * health
 
 void CovidMonster::Draw()
 {	
-	//temp for tests
-	this->bInvincible = false;
-	//temp for tests
-
 	this->drawAlpha = this->minAlpha + (1.f - this->minAlpha)*((float)this->currHealth / (float)this->maxHealth);
  	Render::BeginAlphaMul(this->drawAlpha);
 	Target::Draw();
@@ -41,11 +37,6 @@ void CovidMonster::Draw()
 
 void CovidMonster::Update(float dt)
 {
-	//temp for tests
-	this->bInvincible = false;
-	this->bCanInviteVisitor = true;
-	//temp for tests
-
 	Target::Update(dt);
 	this->inviteTimer += dt;
 	if ( this->inviteTimer >= this->inviteDelay)
@@ -69,6 +60,7 @@ void CovidMonster::ApplyDamage(int dmgPoints)
 	if (!this->bInvincible && this->currHealth > 0 && this->sporeCount == 0)
 	{
 		this->currHealth -= dmgPoints;
+		this->CheckHealth();
 
 		this->drawAlpha = this->minAlpha + (1 - this->minAlpha)*(this->currHealth / this->maxHealth);
 
@@ -92,7 +84,7 @@ bool CovidMonster::CheckBulletCollision(Bullet * bullet)
 	collisionRect.yStart -= 1.f;
 	
 	if (collisionRect.Contains(bullet->GetCurrentPosition()))
-	{		
+	{				
 		this->ApplyDamage();
 
 		//destroying bullet

@@ -109,3 +109,17 @@ bool Utilities::CheckScreenCollision(FRect screenBounds, FPoint position, float 
 
 	return false;
 }
+
+bool Utilities::SqueezeRectangle(FRect & rect, float value)
+{
+	value = math::abs(value);
+	if (value > rect.Width() / 2 || value > rect.Height() / 2)
+		return false;
+
+	rect.xStart += value;
+	rect.yStart += value;
+	rect.xEnd -= value;
+	rect.yEnd -= value;
+
+	return true;
+}

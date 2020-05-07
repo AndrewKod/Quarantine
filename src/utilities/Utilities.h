@@ -14,4 +14,6 @@ public:
 	static bool CheckScreenCollision(FRect screenBounds, FPoint position, float positonOffset, float bounceOffset,
 		float & outMirrorAngle, float& outDefaultDirection, FPoint& outNewTrajectoryStart);
 
+	static bool SqueezeRectangle(FRect& rect, float value);
+
 };

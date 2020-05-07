@@ -7,6 +7,7 @@
 #include "CovidSpore.h"
 #include "Bullet.h"
 #include "Utilities.h"
+#include "OutdoorWidget.h"
 
 
 GameWidget::GameWidget(const std::string& name, rapidxml::xml_node<>* elem)
@@ -73,6 +74,7 @@ void GameWidget::Init()
 	this->gunTex = Core::resourceManager.Get<Render::Texture>("gun");
 	this->aimTex = Core::resourceManager.Get<Render::Texture>("aim");
 	this->bulletTex = Core::resourceManager.Get<Render::Texture>("bullet");
+	this->maskTex = Core::resourceManager.Get<Render::Texture>("medical_mask_small");
 
 	this->currentAimPos = IPoint(0, 0);
 	this->aimCenterOffset = FPoint(this->aimTex->getBitmapRect().Width() / 2, this->aimTex->getBitmapRect().Height() / 2);
@@ -90,12 +92,14 @@ void GameWidget::Init()
 
 	this->destroySporeDelegate = Delegate<FPoint>::Create<GameWidget, &GameWidget::DestroySpore>(this);
 	this->hitSporeDelegate = Delegate<FPoint>::Create<GameWidget, &GameWidget::HitSpore>(this);
-
 	
-
 
 	this->bGameOver = false;
 	this->bVictory = false;
+
+	this->bMasked = false;
+	this->bInfected = false;
+	this->bAtacking = false;
 }
 
 void GameWidget::Draw()
@@ -223,9 +227,22 @@ void GameWidget::AcceptMessage(const Message& message)
 	{				
 		this->bDoorOpened = message.getIntegerParam();
 
-		if (this->bGameStarted && this->bDoorOpened)
+		this->GetMaskedAndInfected();
+
+		if (this->bGameStarted && this->bDoorOpened && !this->bMasked && !this->bInfected)
 		{
+			this->bAtacking = true;
 			this->AtackVisitor();
+		}
+		if ((this->bGameStarted && this->bDoorOpened && this->bMasked && !this->bInfected)
+			||
+			(this->bGameStarted && !this->bDoorOpened && !this->bMasked && !this->bInfected))
+		{
+			if (this->bAtacking)
+			{
+				this->bAtacking = false;
+				this->StopAtack();
+			}
 		}
 	}
 	else if (publisher == "OutdoorWidget" && data == "bMonsterAtTheDoor")
@@ -234,6 +251,16 @@ void GameWidget::AcceptMessage(const Message& message)
 		this->_timer = 0;
 		this->bCanWalk = true;
 	}	
+	else if (publisher == "OutdoorWidget" && data == "HealMonster")
+	{
+		if(this->covidMonster!=nullptr)
+			this->covidMonster->Heal();			
+	}
+	else if (publisher == "OutdoorWidget" && data == "SetMonsterInvincible")
+	{
+		if (this->covidMonster != nullptr)
+			this->covidMonster->SetInvincible();
+	}
 	else if (publisher == "MainLayer" && data == "UpdateSettings")
 	{
 		this->UpdateSettings();
@@ -407,31 +434,57 @@ void GameWidget::ConstructSporeGrid()
 void GameWidget::CheckCollisions()
 {	
 	//Check bullets collision with covidMonster
-	if (this->covidMonster!=nullptr && this->covidMonster->GetSporeCount() == 0)
+	if (this->covidMonster!=nullptr && this->covidMonster->GetSporeCount() == 0 && !this->bInfected)
 	{
-		
-		for (Bullet* bullet : this->bullets)
-		{
-			if (this->covidMonster != nullptr && this->covidMonster->CheckBulletCollision(bullet))
-			{
-				//covidMonster can get only one damage point after all spores destroyed
-				this->covidMonster->SetInvincible();
-				//and spawns new swarm of spores
-				this->currentSporeSpawnDelay = this->sporeSpawnStartDelay;
-			}
-		}		
-
-		if (this->covidMonster->WantsDestroy())
-		{
-			delete this->covidMonster;
-			this->covidMonster = nullptr;
-		}
+		this->CheckMonsterAndBulletsCollision();
 		return;
-	}
+	}	
 	
+	this->GetMaskedAndInfected();	
 
 	std::set<size_t> checkedSpores;
-	std::set<size_t>::iterator foundCheckedId;	
+	//Check Bullet collision
+	this->CheckSporesAndBulletsCollision(checkedSpores);
+
+	//Check spores collision with visitor if door is opened
+	if (this->bDoorOpened && !this->bMasked && !this->bInfected)
+	{
+		this->CheckSporesAndVisitorCollision();
+
+		//skip all spore collision tests if visitor atacked
+		return;
+	}	
+
+	//Check Screen collision
+	this->CheckSporesAndScreenCollision(checkedSpores);
+
+	//Check collision with other spores by searching in neighbouring grid cells
+	this->CheckSporesWithSporesCollision(checkedSpores);
+}
+
+void GameWidget::CheckMonsterAndBulletsCollision()
+{
+	for (Bullet* bullet : this->bullets)
+	{
+		if (this->covidMonster != nullptr && this->covidMonster->CheckBulletCollision(bullet))
+		{
+			//covidMonster can get only one damage point after all spores destroyed
+			this->covidMonster->SetInvincible();
+			//and spawns new swarm of spores
+			this->currentSporeSpawnDelay = this->sporeSpawnStartDelay;
+		}
+	}
+
+	if (this->covidMonster->WantsDestroy())
+	{
+		delete this->covidMonster;
+		this->covidMonster = nullptr;
+	}
+}
+
+void GameWidget::CheckSporesAndBulletsCollision(std::set<size_t>& checkedSpores)
+{
+	std::set<size_t>::iterator foundCheckedId;
 	//Check Bullet collision
 	for (Bullet* bullet : this->bullets)
 	{
@@ -446,21 +499,48 @@ void GameWidget::CheckCollisions()
 				if (l < 0 || l >= this->gridSize.x)
 					continue;
 				//check spores for collision with bullet
-				
+
 				std::set<size_t>& sporeIds = this->sporeGrid[k][l].sporeIds;
 				for (std::set<size_t>::iterator IdsIt = sporeIds.begin(); IdsIt != sporeIds.end(); IdsIt++)
-				{			
+				{
 					size_t sporeId = *IdsIt;
-					if (this->covidSpores[sporeId]!=nullptr && this->covidSpores[sporeId]->CheckBulletCollision(bullet))
+					if (this->covidSpores[sporeId] != nullptr && this->covidSpores[sporeId]->CheckBulletCollision(bullet))
 					{
-						checkedSpores.insert(sporeId);					
+						checkedSpores.insert(sporeId);
 					}
-				}				
-			}			
+				}
+			}
+		}
+	}
+}
+
+void GameWidget::CheckSporesAndVisitorCollision()
+{
+	IRect doorRect = this->doorClosedTex->getBitmapRect();
+	FRect collideArea(this->doorPos.x, this->doorPos.x + doorRect.Width(),
+		this->doorPos.y, this->doorPos.y + doorRect.Height());
+	Utilities::SqueezeRectangle(collideArea, 30.f);
+
+	bool bStopAtack = false;
+	for (size_t sporeId = 0; sporeId < this->covidSpores.size(); sporeId++)
+	{
+		if (this->covidSpores[sporeId] != nullptr && this->covidSpores[sporeId]->CheckVisitorCollision(collideArea))
+		{
+			bStopAtack = true;
+			break;
 		}
 	}
 
-	//Check Screen collision
+	if (this->bAtacking && bStopAtack)
+	{
+		this->bAtacking = false;
+		this->StopAtack();
+	}
+}
+
+void GameWidget::CheckSporesAndScreenCollision(std::set<size_t>& checkedSpores)
+{
+	std::set<size_t>::iterator foundCheckedId;
 	for (size_t sporeId = 0; sporeId < this->covidSpores.size(); sporeId++)
 	{
 		if (this->covidSpores[sporeId] == nullptr)
@@ -475,7 +555,12 @@ void GameWidget::CheckCollisions()
 			}
 		}
 	}
+}
 
+//Check collision with other spores by searching in neighbouring grid cells
+void GameWidget::CheckSporesWithSporesCollision(std::set<size_t>& checkedSpores)
+{
+	std::set<size_t>::iterator foundCheckedId;
 	bool bCollisionFound = false;
 	//Check collision with other spores by searching in neighbouring grid cells
 	for (size_t sporeId = 0; sporeId < this->covidSpores.size(); sporeId++)
@@ -488,11 +573,11 @@ void GameWidget::CheckCollisions()
 		{
 			IPoint cellId = this->covidSpores[sporeId]->GetCellId();
 			//At first, check current grid cell for other spores and perform collision tests
-			CheckCoupleSporesCollision(sporeId, cellId, checkedSpores, bCollisionFound);			
-			
+			CheckCoupleSporesCollision(sporeId, cellId, checkedSpores, bCollisionFound);
+
 			//checking other neighbouring cells
 			if (!bCollisionFound)//checkedSpores do not contains current spore yet
-			{				
+			{
 				for (int k = cellId.y - 1; k <= cellId.y + 1; k++)
 				{
 					if (k < 0 || k >= this->gridSize.y)
@@ -667,6 +752,10 @@ void GameWidget::DeleteSpore(size_t sporeId)
 	this->covidSpores[sporeId] = nullptr;
 
 	this->covidMonster->SubtractSpores();	
+
+	//reset sporeSpawnTimer for delay before new spore swarm spawned
+	if (this->covidMonster->GetSporeCount() == 0)
+		this->sporeSpawnTimer = 0.f;
 }
 
 void GameWidget::DrawAim()
@@ -750,25 +839,10 @@ void GameWidget::ShootGunBullet()
 		FRect bulletScreenBounds = this->sporeScreenBounds.Inflated(-this->bulletTex->getBitmapRect().Width()/2);
 		//expand bulletScreenBounds for capturing points in correct coordinates
 		bulletScreenBounds.xEnd += 1.f;
-		bulletScreenBounds.yStart -= 1.f;
-
-		//Calculate start point for bullet
-		FPoint startPoint = this->gunOriginPos;
-		startPoint.y += this->gunBulletHeight;
-
-		//translate startPoint to origin
-		FPoint transStartPoint = startPoint - this->gunCenterPos;	
-		float transPointAngle = transStartPoint.GetAngle() * 180 / math::PI;
-		float startPointDist = transStartPoint.GetDistanceToOrigin();
-		startPointDist += this->gunBulletOffset;
-		transStartPoint = FPoint(startPointDist, 0.f);
-		transStartPoint.Rotate((this->aimAngle - (180.f - transPointAngle)) / (180 / math::PI));
-
-		//translate start point back to it's space
-		startPoint = transStartPoint + this->gunCenterPos;
+		bulletScreenBounds.yStart -= 1.f;		
 
 		Bullet* bullet = new Bullet(this->bullets.size(), this->bulletTex, 135,
-			bulletScreenBounds, this->aimAngle, startPoint);		
+			bulletScreenBounds, this->aimAngle, this->CalculateBulletStartPosition(), 3);
 		
 		this->bullets.insert(bullet);
 	}
@@ -779,6 +853,15 @@ void GameWidget::ShootGunMask()
 	if (this->bGameStarted)
 	{
 		this->bGunShot = true;
+		FRect bulletScreenBounds = this->sporeScreenBounds.Inflated(-this->maskTex->getBitmapRect().Width() / 2);
+		//expand bulletScreenBounds for capturing points in correct coordinates
+		bulletScreenBounds.xEnd += 1.f;
+		bulletScreenBounds.yStart -= 1.f;
+
+		Bullet* mask = new Bullet(this->bullets.size(), this->bulletTex, 135,
+			bulletScreenBounds, this->aimAngle, this->CalculateBulletStartPosition(), 1);
+
+		this->masks.insert(mask);
 	}
 }
 
@@ -829,6 +912,51 @@ void GameWidget::AtackVisitor()
 
 		this->covidSpores[sporeId]->AtackVisitor(atackPoint);
 	}
+}
+
+void GameWidget::StopAtack()
+{
+	for (size_t sporeId = 0; sporeId < this->covidSpores.size(); sporeId++)
+	{
+		if (this->covidSpores[sporeId] == nullptr)
+			continue;
+
+		this->covidSpores[sporeId]->StopAtack();
+	}
+}
+
+void GameWidget::GetMaskedAndInfected()
+{
+	Layer* outdoorLayer = Core::guiManager.getLayer("OutdoorLayer");
+	if (outdoorLayer != nullptr)
+	{
+		GUI::Widget* widget = outdoorLayer->getWidget("OutdoorWidget");
+		OutdoorWidget* outdoorWidget = (OutdoorWidget*)widget;
+		if (outdoorWidget != nullptr)
+		{
+			this->bMasked = outdoorWidget->GetMasked();
+			this->bInfected = outdoorWidget->GetInfected();
+		}
+	}
+}
+
+FPoint GameWidget::CalculateBulletStartPosition()
+{
+	FPoint startPoint = this->gunOriginPos;
+	startPoint.y += this->gunBulletHeight;
+
+	//translate startPoint to origin
+	FPoint transStartPoint = startPoint - this->gunCenterPos;
+	float transPointAngle = transStartPoint.GetAngle() * 180 / math::PI;
+	float startPointDist = transStartPoint.GetDistanceToOrigin();
+	startPointDist += this->gunBulletOffset;
+	transStartPoint = FPoint(startPointDist, 0.f);
+	transStartPoint.Rotate((this->aimAngle - (180.f - transPointAngle)) / (180 / math::PI));
+
+	//translate start point back to it's space
+	startPoint = transStartPoint + this->gunCenterPos;
+	
+	return startPoint;
 }
 
 

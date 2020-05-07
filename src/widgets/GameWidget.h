@@ -87,8 +87,10 @@ class GameWidget : public GUI::Widget
 	Render::Texture* gunTex;
 	Render::Texture* aimTex;
 	Render::Texture* bulletTex;	
+	Render::Texture* maskTex;
 
 	std::set<Bullet*> bullets;
+	std::set<Bullet*> masks;
 	
 	//updating every frame
 	FPoint currentAimPos;
@@ -102,21 +104,14 @@ class GameWidget : public GUI::Widget
 	//height at left edge of gunTex where bullet spawning
 	float gunBulletHeight;
 	//distance from gunTex where bullet spawning
-	float gunBulletOffset;
-	float gunTimer;
+	float gunBulletOffset;	
 
-	bool bGunShot;
-	float bulletStartSpeed;
-	float bulletCurrentSpeed;
-
-	
+	bool bGunShot;	
 	
 	///////////////////////////////////////////PARTICLES//////////////////////////////////////////
 
 	EffectsContainer effCont;
-	ParticleEffectPtr trailEff;
-	//ParticleEffectPtr hitEff;
-	//ParticleEffectPtr destroyEff;
+	ParticleEffectPtr trailEff;	
 	
 	Delegate<FPoint> destroySporeDelegate;
 	Delegate<FPoint> hitSporeDelegate;
@@ -126,6 +121,10 @@ class GameWidget : public GUI::Widget
 
 	bool bGameOver;
 	bool bVictory;
+
+	bool bMasked;
+	bool bInfected;
+	bool bAtacking;
 
 public:
 	GameWidget(const std::string& name, rapidxml::xml_node<>* elem);
@@ -153,9 +152,21 @@ private:
 
 	void ConstructSporeGrid();
 
+	///////////////////////CHECK COLLISIONS////////////////////////
 	void CheckCollisions();
 
+	void CheckMonsterAndBulletsCollision();
+
+	void CheckSporesAndBulletsCollision(std::set<size_t>& checkedSpores);
+
+	void CheckSporesAndVisitorCollision();
+
+	void CheckSporesAndScreenCollision(std::set<size_t>& checkedSpores);
+
+	void CheckSporesWithSporesCollision(std::set<size_t>& checkedSpores);
+
 	void CheckCoupleSporesCollision(size_t originId, IPoint checkingCellId, std::set<size_t>& checkedSpores, bool& bCollisionFound);
+	////////////////////////////////////////////////////////////////
 
 	void CreateSporeTemplates();	
 
@@ -185,4 +196,10 @@ private:
 	void DestroyCovidMonster(const void * pSender, FPoint& position);
 
 	void AtackVisitor();
+
+	void StopAtack();
+
+	void GetMaskedAndInfected();
+
+	FPoint CalculateBulletStartPosition();
 };

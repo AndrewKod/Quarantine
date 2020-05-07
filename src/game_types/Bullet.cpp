@@ -9,7 +9,7 @@ Bullet::Bullet()
 }
 
 Bullet::Bullet(int bulletId, Render::Texture * bulletTex, float speed,
-	FRect screenBounds,	float startAngle, FPoint startPoint)
+	FRect screenBounds,	float startAngle, FPoint startPoint, int maxRicochets)
 {
 	this->bulletId = bulletId;
 	this->bulletTex = bulletTex;	
@@ -19,7 +19,7 @@ Bullet::Bullet(int bulletId, Render::Texture * bulletTex, float speed,
 	this->screenBounds = screenBounds;
 	this->centerOffset = FPoint(bulletTex->getBitmapRect().Width()/2, bulletTex->getBitmapRect().Width()/2);
 
-	this->maxRicochets = 3;
+	this->maxRicochets = maxRicochets;
 	this->currRicochets = 0;
 
 	this->timer = 0.f;

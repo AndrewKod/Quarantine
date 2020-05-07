@@ -90,6 +90,7 @@
     <texture id="gun" path="textures/gun.png" />
     <texture id="aim" path="textures/aim.png" />
     <texture id="bullet" path="textures/bullet.png" />
+    <texture id="medical_mask_small" path="textures/medical_mask_small.png" />
     
 	</Textures>
 </Resources>

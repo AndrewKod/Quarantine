@@ -31,11 +31,11 @@ void OutdoorWidget::Init()
 	this->visitorsMasked.push_back(Core::resourceManager.Get<Render::Texture>("young_man_masked"));
 	this->visitorsMasked.push_back(Core::resourceManager.Get<Render::Texture>("young_woman_masked"));
 
-	this->visitorsMasked.push_back(Core::resourceManager.Get<Render::Texture>("man_infected"));
-	this->visitorsMasked.push_back(Core::resourceManager.Get<Render::Texture>("woman_infected"));
-	this->visitorsMasked.push_back(Core::resourceManager.Get<Render::Texture>("doctor_infected"));
-	this->visitorsMasked.push_back(Core::resourceManager.Get<Render::Texture>("young_man_infected"));
-	this->visitorsMasked.push_back(Core::resourceManager.Get<Render::Texture>("young_woman_infected"));
+	this->visitorsInfected.push_back(Core::resourceManager.Get<Render::Texture>("man_infected"));
+	this->visitorsInfected.push_back(Core::resourceManager.Get<Render::Texture>("woman_infected"));
+	this->visitorsInfected.push_back(Core::resourceManager.Get<Render::Texture>("doctor_infected"));
+	this->visitorsInfected.push_back(Core::resourceManager.Get<Render::Texture>("young_man_infected"));
+	this->visitorsInfected.push_back(Core::resourceManager.Get<Render::Texture>("young_woman_infected"));
 	
 	int i = 0;
 	float time = 0.0f;
@@ -44,7 +44,7 @@ void OutdoorWidget::Init()
 
 
 	//Creating splines
-	int segmentsCount = 22;
+	int segmentsCount = 24;
 	int atTheDoorStart = 10;
 	int leaveStart = 20;
 	while (i < segmentsCount)
@@ -70,7 +70,7 @@ void OutdoorWidget::Init()
 		
 		i++;
 		time += 0.05f;
-		if(i<10||i>=20)
+		if (i < atTheDoorStart || i > leaveStart)
 			x += 100.0f;
 		if (i % 2 == 0)
 		{
@@ -92,20 +92,44 @@ void OutdoorWidget::Init()
 
 	this->bInfected = false;
 	this->bMasked = false;
+
+	this->bVisitorExploded = false;
+}
+
+void OutdoorWidget::HealMonster()
+{
+	Layer* mainLayer = Core::guiManager.getLayer("MainLayer");
+	if (mainLayer != nullptr)
+	{		
+		Message mess("OutdoorWidget", "HealMonster");
+		mainLayer->BroadcastMessage(mess);
+	}
+}
+
+void OutdoorWidget::SetMonsterInvincible()
+{
+	Layer* mainLayer = Core::guiManager.getLayer("MainLayer");
+	if (mainLayer != nullptr)
+	{		
+		Message mess("OutdoorWidget", "SetMonsterInvincible");
+		mainLayer->BroadcastMessage(mess);
+	}
 }
 
 void OutdoorWidget::Draw()
 {
 	backgroundTex->Draw();
 
+	FPoint currentPosition;
+
 	if (this->bCanTick)
 	{
+		bool bWantsExplodeVisitor = false;
+
 		//the larger coef, the slower animation speed
 		float speedCoef = 10.0f;
 
-		float splineTime = this->_timer / speedCoef;
-
-		FPoint currentPosition;
+		float splineTime = this->_timer / speedCoef;		
 		
 		//comingSpline using
 		if (!this->bComingFinished)
@@ -135,10 +159,15 @@ void OutdoorWidget::Draw()
 		//leaveSpline using after atTheDoorSpline passed
 		else if (!this->bLeaveFinished)
 		{
+			if (this->bInfected)
+				bWantsExplodeVisitor = true;
+
 			if (splineTime >= this->endTime)
 			{				
 				this->bLeaveFinished = true;
 				this->bCanTick = false;
+				this->bInfected = false;
+				this->bMasked = false;
 			}
 			currentPosition = this->visitorLeaveSpline.getGlobalFrame(splineTime);
 		}
@@ -159,26 +188,47 @@ void OutdoorWidget::Draw()
 				FRect doorRect(740.f, 850.f, 130.f, 445.f);// door rectangle
 
 				//open/close door on MainLayer if visitor at the door
-				Message mess("OutdoorWidget", "bDoorOpened", doorRect.Contains(currentPosition) ? 1 : 0);
+				Message mess("OutdoorWidget", "bDoorOpened",
+					doorRect.Contains(currentPosition) ? 1 : 0);
 				mainLayer->BroadcastMessage(mess);
 			}
 		}
 
 
-		//
-		// И рисуем объект в этих координатах
-		//
-		Render::device.PushMatrix();
-		Render::device.MatrixTranslate(currentPosition.x, currentPosition.y, 0);
-		this->currVisitorTex->Draw();
-		Render::device.PopMatrix();
+		if (!bWantsExplodeVisitor && !this->bVisitorExploded)
+		{
+			Render::device.PushMatrix();
+			Render::device.MatrixTranslate(currentPosition.x, currentPosition.y, 0);
+			this->currVisitorTex->Draw();
+			Render::device.PopMatrix();
+		}
+		else
+		{
+			if (!this->bVisitorExploded)
+			{
+				this->bVisitorExploded = true;
+
+				this->HealMonster();
+
+				ParticleEffectPtr eff = effCont.AddEffect("BigHit");
+				eff->posX = currentPosition.x + this->currVisitorTex->getBitmapRect().Width() / 2;
+				eff->posY = currentPosition.y + this->currVisitorTex->getBitmapRect().Height() * 0.75f;
+				eff->Reset();
+
+				//this->bInfected = false;
+			}
+		}
 	}
+
+	effCont.Draw();
 }
 
 void OutdoorWidget::Update(float dt)
 {
 	if(this->bCanTick)
 		this->_timer += dt;
+
+	effCont.Update(dt);
 }
 
 bool OutdoorWidget::MouseDown(const IPoint &mouse_pos)
@@ -220,6 +270,7 @@ void OutdoorWidget::AcceptMessage(const Message& message)
 		this->bComingFinished = false;
 		this->bAtTheDoorFinished = false;
 		this->bLeaveFinished = false;
+		this->bVisitorExploded = false;
 
 		this->currVisitorId = math::random(this->visitors.size() - 1);
 		this->currVisitorTex = this->visitors[this->currVisitorId];
@@ -228,16 +279,26 @@ void OutdoorWidget::AcceptMessage(const Message& message)
 	{
 		if (!this->bMasked)
 		{
-			this->bInfected = true;
-			this->currVisitorTex = this->visitorsInfected[this->currVisitorId];
+			//set bInfected and infected texture once
+			if (!this->bInfected)
+			{
+				this->bInfected = true;
+				this->currVisitorTex = this->visitorsInfected[this->currVisitorId];
+				//prevent damaging monster while visitor alive
+				this->SetMonsterInvincible();
+			}
 		}
 	}
 	else if (publisher == "GameWidget" && data == "mask_visitor")
 	{
 		if (!this->bInfected)
 		{
-			this->bMasked = true;
-			this->currVisitorTex = this->visitorsMasked[this->currVisitorId];
+			//set bMasked and masked texture once
+			if (!this->bMasked)
+			{
+				this->bMasked = true;
+				this->currVisitorTex = this->visitorsMasked[this->currVisitorId];
+			}
 		}
 	}
 }

@@ -14,6 +14,8 @@ class CovidSpore :public Target
 
 	std::vector<FPoint> trajectoryKeys;	
 
+	float commonEndTime;
+
 	//grid cell coords
 	//updating every frame
 	IPoint cellId;
@@ -57,6 +59,8 @@ public:
 	void SetCellId(IPoint cellId)								{ this->cellId = cellId; }
 	
 	void AtackVisitor(FPoint targetPoint);
+
+	void StopAtack();
 
 	float GetSporeDirection(bool& bSuccess);
 
@@ -105,5 +109,7 @@ private:
 	void CalcCenterPosition();
 	
 	bool ValidReflectedAngle(float reflectedAngle, float mirrorAngle);
+
+	void RecalculateTrajectoryFactors();
 
 };

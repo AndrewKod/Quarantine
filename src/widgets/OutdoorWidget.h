@@ -21,8 +21,15 @@ public:
 	void KeyPressed(int keyCode) override;
 	void CharPressed(int unicodeChar) override;
 
+	bool GetInfected()	{ return this->bInfected; }
+	bool GetMasked()	{ return this->bMasked; }
+
 private:
 	void Init();
+
+	void HealMonster();
+
+	void SetMonsterInvincible();
 
 private:
 	float _timer;
@@ -63,4 +70,7 @@ private:
 
 	bool bInfected;
 	bool bMasked;
+
+	EffectsContainer effCont;
+	bool bVisitorExploded;
 };

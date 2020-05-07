@@ -12,6 +12,8 @@ CovidSpore::CovidSpore(Render::Texture * targetTex, Render::Texture * healthSegm
 	:Target(targetTex, healthSegmentTex, healthSegmentDmgTex, healthSegmentSpace, maxHealth,
 		trajectorySpline, splineEndTime, speedCoef)
 {	
+	this->commonEndTime = splineEndTime;
+
 	this->trajectoryStart = trajectoryStart;	
 	this->trajectoryGlobalAngle = trajectoryGlobalAngle;
 	this->trajectoryStartAngle = trajectoryStartAngle;	
@@ -82,9 +84,7 @@ void CovidSpore::Update(float dt)
 		else
 		{
 			this->bAtacking = false;
-			this->trajectoryStart = this->atackSpline.GetKey(this->atackSpline.GetKeysCount() - 1);
-			this->trajectoryGlobalAngle = (this->trajectoryStart - this->atackSpline.GetKey(0)).GetAngle();
-			Utilities::CorrectingAngle(this->trajectoryGlobalAngle);
+			this->RecalculateTrajectoryFactors();
 		}
 
 		RestartSplineAnimation();
@@ -215,7 +215,7 @@ bool CovidSpore::CheckBulletCollision(Bullet* bullet)
 	{
 		this->ApplyDamage(1);
 
-		if (this->currHealth > 0)
+		if (this->currHealth > 0 && !this->bAtacking)
 		{
 			FPoint translatedThisPos = this->centerPosition - otherCenterPos;
 			float sporesAngle = translatedThisPos.GetAngle() * 180 / math::PI;
@@ -242,18 +242,21 @@ bool CovidSpore::CheckBulletCollision(Bullet* bullet)
 
 bool CovidSpore::CheckVisitorCollision(FRect collideArea)
 {
-	if (collideArea.Contains(this->centerPosition))
+	if (collideArea.Contains(this->currentPosition))
 	{
 		Layer* outdoorLayer = Core::guiManager.getLayer("OutdoorLayer");
-		if (outdoorLayer != nullptr)
+		Layer* mainLayer = Core::guiManager.getLayer("MainLayer");
+		if (outdoorLayer != nullptr && mainLayer != nullptr)
 		{
 			Message mess("GameWidget", "infect_visitor");
-			outdoorLayer->BroadcastMessage(mess);
+			outdoorLayer->BroadcastMessage(mess);					
 			
 			this->bWantsDestroy = true;
 
 			return true;
 		}		
+		
+		
 	}
 
 	return false;
@@ -267,8 +270,10 @@ void CovidSpore::CalculateCurrentPosition()
 	{
 		this->timer = 0.f;		
 	}
-
-	this->currentPosition = this->atackSpline.getGlobalFrame(splineTime);
+	if(!this->bAtacking)
+		this->currentPosition = this->trajectorySpline.getGlobalFrame(splineTime);
+	else
+		this->currentPosition = this->atackSpline.getGlobalFrame(splineTime);
 }
 
 float CovidSpore::CalcReflectedSplineAngle(float sporeDirectionAngle, float mirrorAngle)
@@ -326,6 +331,17 @@ bool CovidSpore::ValidReflectedAngle(float reflectedAngle, float mirrorAngle)
 	return true;
 }
 
+//prepare to start common trajectorySpline after atacking visitor
+void CovidSpore::RecalculateTrajectoryFactors()
+{
+	this->trajectoryStart = this->currentPosition;
+	if (this->trajectoryStart != this->atackSpline.GetKey(0))
+	{
+		this->trajectoryGlobalAngle = (this->trajectoryStart - this->atackSpline.GetKey(0)).GetAngle() * 180 / math::PI;
+		Utilities::CorrectingAngle(this->trajectoryGlobalAngle);
+	}
+}
+
 void CovidSpore::AtackVisitor(FPoint targetPoint)
 {
 	if (this->bAtacking)
@@ -360,8 +376,27 @@ void CovidSpore::AtackVisitor(FPoint targetPoint)
 		count++;
 	}
 
+	this->timer = 0;
+	this->splineEndTime = endTime;
 	//add last point
 	//this->atackSpline.addKey(endTime, targetPoint);
 
 	this->atackSpline.CalculateGradient();
+}
+
+void CovidSpore::StopAtack()
+{
+	if (!this->bAtacking)
+		return;	
+
+	this->bAtacking = false;
+
+	if (this->bWantsDestroy)
+		return;
+
+	this->splineEndTime = this->commonEndTime;
+
+	RecalculateTrajectoryFactors();
+
+	RestartSplineAnimation();
 }

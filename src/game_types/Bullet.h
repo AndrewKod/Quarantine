@@ -58,7 +58,8 @@ public:
 		float speed,
 		FRect screenBounds,
 		float startAngle,
-		FPoint startPoint	
+		FPoint startPoint,
+		int maxRicochets
 	);	
 
 	~Bullet();
