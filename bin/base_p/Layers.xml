@@ -11,11 +11,11 @@
         <position x="614" />        
         <Controls>          
           <Button name="Start_Start_btn">
-            <position x="120" y="250"/>
+            <position x="120" y="100"/>
             <state normal="start_normal" active="start_active" pressed="start_pressed"/>
           </Button>
            <Button name="Start_Settings_btn">
-             <position x="120" y="180"/>
+             <position x="120" y="30"/>
              <state normal="options_normal" active="options_active" pressed="options_pressed"/>
            </Button>
         </Controls>
@@ -28,13 +28,12 @@
   <Layer name="SettingsLayer">
     <Controls>
       
-      <StartWidget name="StartWidget"/>
+      <!--<StartWidget name="StartWidget"/>-->
+      <SettingsWidget name="SettingsWidget"/>
       
       <Panel name="SettingsButtonsPanel">
         <position x="614" />
-        <Controls>
-
-          <SettingsWidget name="SettingsWidget"/>
+        <Controls>          
 
           <Button name="Settings_OK_btn">
             <position x="120" y="100"/>
@@ -76,7 +75,22 @@
   </Layer>
 
   <Layer name="EndLayer">
+    <Controls>
 
+      <EndWidget name="EndWidget"/>
+
+      <Panel name="ButtonsPanel">
+         <Controls>
+
+          <Button name="End_OK_btn">
+            <position x="430" y="300"/>
+            <state normal="ok_normal" active="ok_active" pressed="ok_pressed"/>
+          </Button>        
+
+        </Controls>
+      </Panel>
+      
+    </Controls>
   </Layer>  
   
   <Layer name="OutdoorLayer" group ="GameLayers">

@@ -188,6 +188,8 @@ private:
 	void DrawMasks();
 	void UpdateMasks(float dt);
 
+	void DrawTimer();
+
 	void ShootGunBullet();
 
 	void ShootGunMask();
@@ -207,4 +209,6 @@ private:
 	void GetMaskedAndInfected();
 
 	FPoint CalculateBulletStartPosition();
+
+	void GameOver();
 };

@@ -16,7 +16,7 @@ CovidMonster::CovidMonster(Render::Texture * targetTex, Render::Texture * health
 	this->sporeCount = 0;
 
 	
-	this->maxSporeCount = maxSporeCount;
+	this->maxSporeCount = 0/*maxSporeCount*/;
 	
 
 	this->bCanInviteVisitor = false;

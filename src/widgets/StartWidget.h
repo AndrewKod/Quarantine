@@ -16,6 +16,7 @@ private:
 	Render::Texture* covidMonsterTex;
 
 	Render::Texture* titleTex;	
+	Render::Texture* sloganTex;
 
 	Render::Texture* maskTex;
 	Render::Texture* virusTex;	

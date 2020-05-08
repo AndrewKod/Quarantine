@@ -94,7 +94,7 @@ void QuarantineAppDelegate::RegisterTypes()
 	REGISTER_WIDGET_XML(SettingsWidget, "SettingsWidget");
 	REGISTER_WIDGET_XML(OutdoorWidget, "OutdoorWidget");
 	REGISTER_WIDGET_XML(GameWidget, "GameWidget");
-	//REGISTER_WIDGET_XML(EndWidget, "EndWidget");	
+	REGISTER_WIDGET_XML(EndWidget, "EndWidget");	
 }
 
 void QuarantineAppDelegate::LoadResources()
@@ -123,6 +123,10 @@ void QuarantineAppDelegate::LoadResources()
 	Layer* mainLayer = Core::guiManager.getLayer("MainLayer");
 	if (mainLayer != nullptr)
 		mainLayer->messageFunc = this->messageFunc;
+
+	Layer* endLayer = Core::guiManager.getLayer("EndLayer");
+	if (endLayer != nullptr)
+		endLayer->messageFunc = this->messageFunc;
 }
 
 void QuarantineAppDelegate::OnResourceLoaded() {

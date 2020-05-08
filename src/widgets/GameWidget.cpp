@@ -158,11 +158,15 @@ void GameWidget::Draw()
 		this->DrawBullets();
 
 		this->DrawMasks();
+		
+		this->DrawTimer();
 	}
 
 	this->DrawAim();
 
 	this->DrawGun();	
+
+	
 }
 
 void GameWidget::Update(float dt)
@@ -186,6 +190,17 @@ void GameWidget::Update(float dt)
 		this->UpdateSpores(dt);
 	}
 
+	if (this->bGameStarted)
+	{
+		this->gameTime -= dt;
+		if (this->gameTime <= 0.f && !this->bGameOver)
+		{
+			this->gameTime = 0.f;
+			this->bVictory = false;
+			this->bGameOver = true;
+			this->GameOver();
+		}
+	}
 	
 }
 
@@ -883,6 +898,23 @@ void GameWidget::UpdateMasks(float dt)
 	}
 }
 
+void GameWidget::DrawTimer()
+{
+	if (!Render::isFontLoaded("arial_giant"))
+		return;
+
+	Render::BindFont("arial_giant");
+
+	std::string timeString = utils::lexical_cast((int)this->gameTime);
+
+	float stringwidth = Render::getStringWidth(timeString, "arial_giant");
+
+	int x = (Render::device.Width() - stringwidth) / 2;
+
+	Render::PrintString(x, 0, timeString, 1.0f, LeftAlign, BottomAlign);
+
+}
+
 void GameWidget::ShootGunBullet()
 {
 	if (this->bGameStarted)
@@ -950,6 +982,8 @@ void GameWidget::DestroyCovidMonster(const void * pSender, FPoint & position)
 
 	this->bGameOver = true;
 	this->bVictory = true;		
+
+	this->GameOver();	
 }
 
 void GameWidget::AtackVisitor()
@@ -1009,6 +1043,17 @@ FPoint GameWidget::CalculateBulletStartPosition()
 	startPoint = transStartPoint + this->gunCenterPos;
 	
 	return startPoint;
+}
+
+void GameWidget::GameOver()
+{
+	Layer* endLayer = Core::guiManager.getLayer("EndLayer");
+	if (endLayer != nullptr)
+	{
+		Message mess("GameWidget", "bVictory", this->bVictory);
+		endLayer->BroadcastMessage(mess);
+		Core::mainScreen.pushLayer("EndLayer");
+	}
 }
 
 

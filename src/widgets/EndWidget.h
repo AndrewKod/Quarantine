@@ -6,37 +6,33 @@
 ///
 class EndWidget : public GUI::Widget
 {
+
 public:
 	EndWidget(const std::string& name, rapidxml::xml_node<>* elem);
 
 	void Draw() override;
 	void Update(float dt) override;
 
-	void AcceptMessage(const Message& message) override;
+	void AcceptMessage(const Message& message) override;	
 
-	bool MouseDown(const IPoint& mouse_pos) override;
-	void MouseMove(const IPoint& mouse_pos) override;
-	void MouseUp(const IPoint& mouse_pos) override;
-
-	void KeyPressed(int keyCode) override;
-	void CharPressed(int unicodeChar) override;
+	void SetVictory(bool bVictory) { this->bVictory = bVictory; }
 
 private:
 	void Init();
 
 private:
-	float _timer;
 
-	float _scale;
-	float _angle;
+	float timer;
+	float endTime;
 
-	Render::Texture* _tex1;
-	Render::Texture* _tex2;
-	Render::Texture* _tex3;
-	int _curTex;
+	float saluteTimer;
+	float saluteDelay;
+	
+	Render::Texture* victoryTex;
+	Render::Texture* defeatTex;
+	
+	bool bVictory;
 
-	EffectsContainer _effCont;
-	ParticleEffectPtr _eff;
-
-	TimedSpline<FPoint> spline;
+	EffectsContainer effCont;
+	
 };

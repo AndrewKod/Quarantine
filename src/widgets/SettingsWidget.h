@@ -11,7 +11,16 @@ public:
 
 	void Draw() override;	
 
-private:	
+private:
+	void Init();
+
+private:
+
+	Render::Texture* covidMonsterTex;
+
+	Render::Texture* titleTex;
 	
+	Render::Texture* maskTex;
+	Render::Texture* virusTex;
 	
 };

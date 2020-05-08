@@ -7,6 +7,9 @@
     <font name="arial_large" family="arial" size="32" color="255;255;255;255" letterSpacing="0">
       <Effect alpha="0.1" type="shadow" blurX="2" blurY="2" strength="50" angle="0" inner="false" color="0;0;0;255" offset="0"/>
     </font>
+    <font name="arial_giant" family="arial" size="120" color="255;255;255;255" letterSpacing="0">
+      <Effect alpha="0.1" type="shadow" blurX="2" blurY="2" strength="50" angle="0" inner="false" color="0;0;0;255" offset="0"/>
+    </font>
 	</FreeTypeFonts>
 	<Textures>
     <texture id="Star" path="textures/star.png" group="TestGroup" upload="false"/>
@@ -47,6 +50,10 @@
     <texture id="subtract_pressed" path="textures/Buttons/subtract_pressed.png" />
 
     <texture id="quarantine_title" path="textures/quarantine_title.png" />
+    <texture id="quarantine_slogan" path="textures/quarantine_slogan.png" />
+
+    <texture id="victory_text" path="textures/victory_text.png" />
+    <texture id="defeat_text" path="textures/defeat_text.png" />
 
     <texture id="medical_mask" path="textures/medical_mask.png" />
 
