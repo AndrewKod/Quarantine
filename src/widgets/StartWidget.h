@@ -1,7 +1,7 @@
 #pragma once
+#include "BaseWidget.h"
 
-
-class StartWidget : public GUI::Widget
+class StartWidget : public BaseWidget
 {
 public:
 	StartWidget(const std::string& name, rapidxml::xml_node<>* elem);
@@ -13,11 +13,5 @@ private:
 
 private:
 
-	Render::Texture* covidMonsterTex;
-
-	Render::Texture* titleTex;	
-	Render::Texture* sloganTex;
-
-	Render::Texture* maskTex;
-	Render::Texture* virusTex;	
+	Render::Texture* sloganTex;	
 };

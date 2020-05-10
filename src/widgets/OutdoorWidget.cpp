@@ -8,6 +8,11 @@ OutdoorWidget::OutdoorWidget(const std::string& name, rapidxml::xml_node<>* elem
 	//Init();
 }
 
+OutdoorWidget::~OutdoorWidget()
+{
+	this->DeInit();
+}
+
 void OutdoorWidget::Init()
 {	
 	this->_timer = 0.0f;

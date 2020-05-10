@@ -78,11 +78,14 @@ void Bullet::Draw()
 	this->bulletTex->Draw();
 	Render::device.PopMatrix();
 
-	//stdafx.h	
+	//Globals.h	
 #ifdef WITH_DEBUG
-	Render::BindFont("arial");
+	if (!Render::isFontLoaded("arial"))
+	{
+		Render::BindFont("arial");
 
-	Render::PrintString(this->currentPosition, utils::lexical_cast(this->bulletId), 2.0f, CenterAlign, TopAlign);
+		Render::PrintString(this->currentPosition, utils::lexical_cast(this->bulletId), 2.0f, CenterAlign, TopAlign);
+	}
 #endif
 
 	//Updating trail position

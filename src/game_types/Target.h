@@ -34,6 +34,7 @@ protected:
 	FPoint currentPosition;
 
 	bool bWantsDestroy;
+	bool bDestroyedByDamage;
 
 public:
 
@@ -63,6 +64,7 @@ public:
 	IRect GetBitmapRect()		{ return this->targetTex->getBitmapRect(); }
 	FPoint GetCurrentPosition() { return this->currentPosition; }
 	bool WantsDestroy()			{ return this->bWantsDestroy; }
+	bool DestroyedByDamage()	{ return this->bDestroyedByDamage; }
 
 	void SetSpeedCoef(float speedCoef) { this->speedCoef = speedCoef; }
 

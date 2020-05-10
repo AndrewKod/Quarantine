@@ -136,15 +136,13 @@ void QuarantineAppDelegate::OnResourceLoaded() {
 }
 
 void QuarantineAppDelegate::OnPostDraw() {
-	//stdafx.h	
+	//Globals.h	
 #ifdef WITH_DEBUG	
 	
 	if (!Render::isFontLoaded("arial"))
 		return;
 
-	//
-	// Перед вызовом метода Render::PrintString() нужно привязать нужный шрифт
-	//
+	
 	Render::BindFont("arial");
 
 	int dy = Render::getFontHeight();

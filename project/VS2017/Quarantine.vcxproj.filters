@@ -46,6 +46,9 @@
     <ClCompile Include="..\..\src\utilities\Utilities.cpp">
       <Filter>Source Files\Utilities</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\widgets\BaseWidget.cpp">
+      <Filter>Source Files\Widgets</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src\stdafx.h">
@@ -95,6 +98,9 @@
     </ClInclude>
     <ClInclude Include="..\..\src\Globals.h">
       <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\widgets\BaseWidget.h">
+      <Filter>Source Files\Widgets</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

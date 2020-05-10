@@ -131,6 +131,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="..\..\src\utilities\Utilities.cpp" />
+    <ClCompile Include="..\..\src\widgets\BaseWidget.cpp" />
     <ClCompile Include="..\..\src\widgets\EndWidget.cpp" />
     <ClCompile Include="..\..\src\widgets\GameWidget.cpp" />
     <ClCompile Include="..\..\src\widgets\SettingsWidget.cpp" />
@@ -149,6 +150,7 @@
     <ClInclude Include="..\..\src\TestWidget.h" />
     <ClInclude Include="..\..\src\stdafx.h" />
     <ClInclude Include="..\..\src\utilities\Utilities.h" />
+    <ClInclude Include="..\..\src\widgets\BaseWidget.h" />
     <ClInclude Include="..\..\src\widgets\EndWidget.h" />
     <ClInclude Include="..\..\src\widgets\GameWidget.h" />
     <ClInclude Include="..\..\src\widgets\SettingsWidget.h" />

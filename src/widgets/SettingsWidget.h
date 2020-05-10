@@ -1,10 +1,8 @@
 #pragma once
 
-///
-/// Виджет - основной визуальный элемент на экране.
-/// Он отрисовывает себя, а также может содержать другие виджеты.
-///
-class SettingsWidget : public GUI::Widget
+#include "BaseWidget.h"
+
+class SettingsWidget : public BaseWidget
 {
 public:
 	SettingsWidget(const std::string& name, rapidxml::xml_node<>* elem);
@@ -15,12 +13,5 @@ private:
 	void Init();
 
 private:
-
-	Render::Texture* covidMonsterTex;
-
-	Render::Texture* titleTex;
-	
-	Render::Texture* maskTex;
-	Render::Texture* virusTex;
 	
 };

@@ -44,6 +44,7 @@ Target::Target(Render::Texture * targetTex, Render::Texture * healthSegmentTex, 
 	this->currentPosition = FPoint(0.f, 0.f);
 
 	this->bWantsDestroy = false;
+	this->bDestroyedByDamage = false;
 }
 
 void Target::Draw()
@@ -64,7 +65,10 @@ void Target::ApplyDamage(int dmgPoints)
 	{
 		this->currHealth -= dmgPoints;
 		if (this->currHealth <= 0)
+		{
+			this->bDestroyedByDamage = true;
 			this->Destroy();
+		}
 		else
 			this->Hit();
 	}

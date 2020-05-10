@@ -10,6 +10,8 @@ class EndWidget : public GUI::Widget
 public:
 	EndWidget(const std::string& name, rapidxml::xml_node<>* elem);
 
+	~EndWidget();
+
 	void Draw() override;
 	void Update(float dt) override;
 

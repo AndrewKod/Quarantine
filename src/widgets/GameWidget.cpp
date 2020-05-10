@@ -17,6 +17,11 @@ GameWidget::GameWidget(const std::string& name, rapidxml::xml_node<>* elem)
 	//Init();
 }
 
+GameWidget::~GameWidget()
+{
+	this->DeInit();
+}
+
 void GameWidget::Init()
 {
 	this->wallTex = Core::resourceManager.Get<Render::Texture>("wall");
@@ -49,6 +54,8 @@ void GameWidget::Init()
 
 	//Get settings defined in input.txt
 	this->gameTime = 0.f;
+	this->maskedAdditionalTime = 3.f;
+	this->sporeAdditionalTime = 0.5f;
 	this->gameSpeed = 0;	
 	this->speedCoef = 250;
 	this->maxSporeCount = 0;
@@ -610,7 +617,12 @@ void GameWidget::CheckMasksAndVisitorCollision(FRect collideArea)
 	{
 		if (mask->CheckAreaCollision(collideArea))
 		{
-			this->bMasked = true;
+			if (!this->bMasked)
+			{
+				this->bMasked = true;
+				//Add time if visitor get mask
+				this->gameTime += this->maskedAdditionalTime;
+			}
 			bStopAtack = true;
 			break;
 		}
@@ -762,9 +774,12 @@ void GameWidget::UpdateSettings()
 
 void GameWidget::DrawSpores()
 {
-	//stdafx.h
+	//Globals.h
 #ifdef WITH_DEBUG
-	Render::BindFont("arial_large");
+	if (!Render::isFontLoaded("arial_large"))
+	{
+		Render::BindFont("arial_large");
+	}
 #endif
 
 	for (size_t i = 0; i < this->covidSpores.size(); i++)
@@ -774,7 +789,11 @@ void GameWidget::DrawSpores()
 
 		if (this->covidSpores[i]->WantsDestroy())
 		{
-			this->DeleteSpore(i);
+			//Adding time if spore destroyed by bullet
+			if(this->covidSpores[i]->DestroyedByDamage())
+				this->gameTime += this->sporeAdditionalTime;
+
+			this->DeleteSpore(i);			
 			continue;
 		}
 
@@ -782,8 +801,11 @@ void GameWidget::DrawSpores()
 
 		//stdafx.h	
 #ifdef WITH_DEBUG	
-		FPoint center = this->covidSpores[i]->GetCenterPosition();
-		Render::PrintString(center.x, center.y, utils::lexical_cast(i), 1.0f, CenterAlign, TopAlign);
+		if (!Render::isFontLoaded("arial_large"))
+		{
+			FPoint center = this->covidSpores[i]->GetCenterPosition();
+			Render::PrintString(center.x, center.y, utils::lexical_cast(i), 1.0f, CenterAlign, TopAlign);
+		}
 #endif
 
 		//covidSpores and sporeGrid processing 

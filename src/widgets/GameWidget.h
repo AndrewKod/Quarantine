@@ -49,6 +49,8 @@ class GameWidget : public GUI::Widget
 
 	float _timer;
 	float gameTimer;
+	float maskedAdditionalTime;
+	float sporeAdditionalTime;
 
 	Render::Texture* wallTex;
 
@@ -128,6 +130,8 @@ class GameWidget : public GUI::Widget
 
 public:
 	GameWidget(const std::string& name, rapidxml::xml_node<>* elem);
+
+	~GameWidget();
 
 	void Draw() override;
 	void Update(float dt) override;
