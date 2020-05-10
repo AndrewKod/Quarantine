@@ -8,17 +8,30 @@ public:
 		{
 			Core::mainScreen.popLayer();
 
+			Message mess("StartLayer", "Init");
+
 			//Push game layers
 			Layer* outdoorLayer = Core::guiManager.getLayer("OutdoorLayer");
 			if (outdoorLayer != nullptr)
-			{
+			{				
+				outdoorLayer->BroadcastMessage(mess);
+
 				Core::mainScreen.pushLayer("OutdoorLayer");
 			}
 
 			Layer* mainLayer = Core::guiManager.getLayer("MainLayer");
 			if (mainLayer != nullptr)
 			{
+				mainLayer->BroadcastMessage(mess);
+
 				Core::mainScreen.pushLayer("MainLayer");
+			}
+
+			//Init EndLayer but not pushing it yet
+			Layer* endLayer = Core::guiManager.getLayer("EndLayer");
+			if (endLayer != nullptr)
+			{
+				endLayer->BroadcastMessage(mess);
 			}
 		}
 
@@ -130,22 +143,34 @@ public:
 				appDelegate->AddTime(5);
 			}
 		}
-		else if (message.getPublisher() == "Test_btn" && message.getData() == "down")
+		else if (message.getPublisher() == "End_OK_btn" && message.getData() == "down")
 		{
-			Message* mess = new Message("Test","123");				
+			//pop MainLayer, OutdoorLayer, EndLayer
+			Core::mainScreen.popLayer();
+			Core::mainScreen.popLayer();
+			Core::mainScreen.popLayer();
+			
+			Message mess("EndLayer", "DeInit");				
+
+			Layer* endLayer = Core::guiManager.getLayer("EndLayer");
+			if (endLayer != nullptr)
+			{
+				endLayer->BroadcastMessage(mess);
+			}
 
 			Layer* outdoorLayer = Core::guiManager.getLayer("OutdoorLayer");
 			if (outdoorLayer != nullptr)
 			{
-				outdoorLayer->BroadcastMessage(*mess);
+				outdoorLayer->BroadcastMessage(mess);
 			}
 
 			Layer* mainLayer = Core::guiManager.getLayer("MainLayer");
 			if (mainLayer != nullptr)
 			{
-				mainLayer->BroadcastMessage(*mess);
-			}
-			
+				mainLayer->BroadcastMessage(mess);
+			}			
+
+			Core::mainScreen.pushLayer("StartLayer");
 		}
 	}
 };

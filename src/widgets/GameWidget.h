@@ -144,7 +144,11 @@ public:
 private:
 	void Init();
 
+	void DeInit();
+
 	void CreateCovidMonster();
+	void DeleteCovidMonster();
+
 
 	void TryAddCovidSpore(int templateId, FPoint startPoint = FPoint(0.f,0.f), float startAngle = 0.f);
 

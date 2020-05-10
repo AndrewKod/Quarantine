@@ -1,9 +1,5 @@
 #pragma once
 
-///
-/// Виджет - основной визуальный элемент на экране.
-/// Он отрисовывает себя, а также может содержать другие виджеты.
-///
 class OutdoorWidget : public GUI::Widget
 {
 public:
@@ -27,6 +23,8 @@ public:
 private:
 	void Init();
 
+	void DeInit();
+
 	void HealMonster();
 
 	void SetMonsterInvincible();
@@ -35,10 +33,7 @@ private:
 	float _timer;
 	bool bCanTick;
 
-	Render::Texture* backgroundTex;
-
-	Render::Texture* doorOpenedTex;
-	Render::Texture* doorClosedTex;
+	Render::Texture* backgroundTex;	
 
 	Render::Texture* currVisitorTex;
 	size_t currVisitorId;

@@ -47,10 +47,10 @@ public:
 
 	void SetMaxSporeCount(int maxSporeCount) { this->maxSporeCount = maxSporeCount; }
 
-	//void SetInvincible() { this->bInvincible = true; }
+	void SetInvincible() { this->bInvincible = true; }
 
 	//Temp For Tests
-	void SetInvincible() { this->bInvincible = false; }
+	//void SetInvincible() { this->bInvincible = false; }
 	//Temp For Tests
 
 	void AddSpores(int count = 1);

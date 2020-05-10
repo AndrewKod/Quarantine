@@ -5,7 +5,7 @@ OutdoorWidget::OutdoorWidget(const std::string& name, rapidxml::xml_node<>* elem
 	: Widget(name)
 	, _timer(0)	
 {
-	Init();
+	//Init();
 }
 
 void OutdoorWidget::Init()
@@ -94,6 +94,16 @@ void OutdoorWidget::Init()
 	this->bMasked = false;
 
 	this->bVisitorExploded = false;
+}
+
+void OutdoorWidget::DeInit()
+{	
+	this->visitors.clear();
+	this->visitorsMasked.clear();
+	this->visitorsInfected.clear();
+
+	this->effCont.KillAllEffects();
+	this->effCont.Finish();	
 }
 
 void OutdoorWidget::HealMonster()
@@ -255,15 +265,19 @@ void OutdoorWidget::MouseUp(const IPoint &mouse_pos)
 }
 
 void OutdoorWidget::AcceptMessage(const Message& message)
-{
-	//
-	// Виджету могут посылаться сообщения с параметрами.
-	//
-
+{	
 	const std::string& publisher = message.getPublisher();
 	const std::string& data = message.getData();
 
-	if (publisher == "GameWidget" && data == "invite_visitor")
+	if (publisher == "StartLayer" && data == "Init")
+	{
+		this->Init();
+	}
+	else if (publisher == "EndLayer" && data == "DeInit")
+	{
+		this->DeInit();
+	}
+	else if (publisher == "GameWidget" && data == "invite_visitor")
 	{
 		this->_timer = 0.f;
 		this->bCanTick = true;

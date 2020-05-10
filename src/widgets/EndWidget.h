@@ -20,6 +20,8 @@ public:
 private:
 	void Init();
 
+	void DeInit();
+
 private:
 
 	float timer;

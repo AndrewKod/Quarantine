@@ -83,7 +83,7 @@
          <Controls>
 
           <Button name="End_OK_btn">
-            <position x="430" y="300"/>
+            <position x="419" y="300"/>
             <state normal="ok_normal" active="ok_active" pressed="ok_pressed"/>
           </Button>        
 

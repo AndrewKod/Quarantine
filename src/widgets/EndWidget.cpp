@@ -5,7 +5,7 @@ EndWidget::EndWidget(const std::string& name, rapidxml::xml_node<>* elem)
 	: Widget(name)
 	
 {
-	Init();
+	//Init();
 }
 
 void EndWidget::Init()
@@ -22,14 +22,25 @@ void EndWidget::Init()
 	bVictory = false;
 }
 
+void EndWidget::DeInit()
+{
+	this->effCont.KillAllEffects();
+	this->effCont.Finish();	
+}
+
 void EndWidget::Draw()
-{		
+{			
 	Render::device.SetTexturing(false);
 	
 	Render::BeginColor(Color(255, 255, 255, 255 * (this->timer / this->endTime)));
-	
+
+	//Unexpected but funny effect if draw effect container here
+	//It's texture is drawn on rectangle
+	if (this->bVictory)
+		this->effCont.Draw();
+
 	Render::DrawRect(0, 0, Render::device.Width(), Render::device.Height());
-	
+
 	Render::EndColor();
 	
 	Render::device.SetTexturing(true);
@@ -44,8 +55,13 @@ void EndWidget::Draw()
 
 	Render::device.PopMatrix();	
 
-	if(this->bVictory)
-		this->effCont.Draw();
+
+	//Have to draw effect container twice in order to appear particles on top of screen
+	//First - before DrawRect()
+	if (this->bVictory)	
+		this->effCont.Draw();	
+
+	
 }
 
 void EndWidget::Update(float dt)
@@ -65,7 +81,7 @@ void EndWidget::Update(float dt)
 		{
 			this->saluteTimer = 0.f;
 
-			ParticleEffectPtr eff = effCont.AddEffect("BigHit");
+			ParticleEffectPtr eff = effCont.AddEffect("Salute");
 			eff->posX = math::random(1, Render::device.Width() - 1);
 			eff->posY = math::random(1, Render::device.Height() - 1);;
 			eff->Reset();
@@ -77,7 +93,6 @@ void EndWidget::Update(float dt)
 
 void EndWidget::AcceptMessage(const Message& message)
 {
-	
 
 	const std::string& publisher = message.getPublisher();
 	const std::string& data = message.getData();
@@ -85,6 +100,14 @@ void EndWidget::AcceptMessage(const Message& message)
 	if (publisher == "GameWidget" && data == "bVictory")
 	{
 		this->bVictory = message.getIntegerParam();
+	}
+	else if (publisher == "StartLayer" && data == "Init")
+	{
+		this->Init();
+	}
+	else if (publisher == "EndLayer" && data == "DeInit")
+	{
+		this->DeInit();
 	}
 }
 

@@ -14,7 +14,7 @@ GameWidget::GameWidget(const std::string& name, rapidxml::xml_node<>* elem)
 	: Widget(name)
 	, _timer(0)
 {
-	Init();
+	//Init();
 }
 
 void GameWidget::Init()
@@ -100,6 +100,38 @@ void GameWidget::Init()
 	this->bMasked = false;
 	this->bInfected = false;
 	this->bAtacking = false;
+}
+
+void GameWidget::DeInit()
+{
+	this->DeleteCovidMonster();
+	
+	for (size_t sporeId = 0; sporeId < this->covidSpores.size(); sporeId++)
+	{
+		if (this->covidSpores[sporeId] != nullptr)
+		{
+			delete this->covidSpores[sporeId];
+			this->covidSpores[sporeId] = nullptr;
+		}
+	}
+	this->covidSpores.clear();
+
+	for (Bullet* bullet: this->bullets)
+	{
+		if(bullet!=nullptr)
+			delete bullet;		
+	}
+	this->bullets.clear();
+
+	for (Bullet* mask: this->masks)
+	{
+		if (mask != nullptr)
+			delete mask;
+	}	
+	this->masks.clear();
+
+	this->effCont.KillAllEffects();
+	this->effCont.Finish();
 }
 
 void GameWidget::Draw()
@@ -234,14 +266,18 @@ void GameWidget::MouseUp(const IPoint &mouse_pos)
 
 void GameWidget::AcceptMessage(const Message& message)
 {
-	//
-	// Виджету могут посылаться сообщения с параметрами.
-	//
-
 	const std::string& publisher = message.getPublisher();
 	const std::string& data = message.getData();
 
-	if (publisher == "OutdoorWidget" && data=="bDoorOpened")
+	if (publisher == "StartLayer" && data == "Init")
+	{
+		this->Init();
+	}
+	else if (publisher == "EndLayer" && data == "DeInit")
+	{
+		this->DeInit();
+	}
+	else if (publisher == "OutdoorWidget" && data=="bDoorOpened")
 	{				
 		this->bDoorOpened = message.getIntegerParam();
 
@@ -283,7 +319,7 @@ void GameWidget::AcceptMessage(const Message& message)
 	{
 		this->UpdateSettings();
 
-		if (this->covidMonster != nullptr)
+		/*if (this->covidMonster != nullptr)
 			this->covidMonster->SetMaxSporeCount(this->maxSporeCount);
 
 		float sporeSpeedCoef = this->speedCoef / this->gameSpeed;
@@ -292,7 +328,7 @@ void GameWidget::AcceptMessage(const Message& message)
 			if (this->covidSpores[sporeId] == nullptr)
 				continue;
 			this->covidSpores[sporeId]->SetSpeedCoef(sporeSpeedCoef);
-		}
+		}*/
 	}
 }
 
@@ -343,6 +379,15 @@ void GameWidget::CreateCovidMonster()
 
 	this->covidMonster->OnHit += this->hitMonsterDelegate;
 	this->covidMonster->OnDestroy += this->destroyMonsterDelegate;
+}
+
+void GameWidget::DeleteCovidMonster()
+{
+	if (this->covidMonster != nullptr)
+	{
+		delete this->covidMonster;
+		this->covidMonster = nullptr;
+	}
 }
 
 
@@ -502,8 +547,7 @@ void GameWidget::CheckMonsterAndBulletsCollision()
 
 	if (this->covidMonster->WantsDestroy())
 	{
-		delete this->covidMonster;
-		this->covidMonster = nullptr;
+		this->DeleteCovidMonster();
 	}
 }
 
