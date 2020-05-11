@@ -27,7 +27,7 @@ private:
 private:
 
 	float timer;
-	float endTime;
+	float endTime;	
 
 	float saluteTimer;
 	float saluteDelay;
@@ -39,4 +39,6 @@ private:
 
 	EffectsContainer effCont;
 	
+	int sampleId;
+
 };

@@ -28,7 +28,7 @@ GUI:LoadLayers("Layers.xml")
 -- Фактическая загрузка группы ресурсов: создаются объекты текстур, загружаются
 -- изображения с диска и т.п. Это длительная операция.
 --
-UploadResourceGroup("TestGroup")
+UploadResourceGroup("QuarantineGroup")
 
 --
 -- Слой кладётся на экран.

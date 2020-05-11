@@ -11,6 +11,9 @@ void StartWidget::Init()
 {
 	BaseWidget::Init();
 	this->sloganTex = Core::resourceManager.Get<Render::Texture>("quarantine_slogan");	
+
+	int sample = MM::manager.PlaySample("quarantine_sound", true);
+
 }
 
 void StartWidget::Draw()

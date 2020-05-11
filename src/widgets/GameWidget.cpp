@@ -107,6 +107,8 @@ void GameWidget::Init()
 	this->bMasked = false;
 	this->bInfected = false;
 	this->bAtacking = false;
+
+	int sample = MM::manager.PlaySample("quarantine");
 }
 
 void GameWidget::DeInit()

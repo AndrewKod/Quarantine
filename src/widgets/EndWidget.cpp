@@ -31,6 +31,9 @@ void EndWidget::DeInit()
 {
 	this->effCont.KillAllEffects();
 	this->effCont.Finish();	
+
+	if(!this->bVictory)
+		MM::manager.FadeAll(3.f);
 }
 
 void EndWidget::Draw()
@@ -105,6 +108,10 @@ void EndWidget::AcceptMessage(const Message& message)
 	if (publisher == "GameWidget" && data == "bVictory")
 	{
 		this->bVictory = message.getIntegerParam();
+		if(!this->bVictory)
+			this->sampleId = MM::manager.PlaySample("quarantine_intro", true);
+
+		
 	}
 	else if (publisher == "StartLayer" && data == "Init")
 	{
