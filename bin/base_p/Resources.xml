@@ -104,8 +104,8 @@
 	</Textures>
 
   <Sounds>
-    <sample id="quarantine" path="sounds/Quarantine.ogg" mix="1" mode="stream"/>
-    <sample id="quarantine_sound" path="sounds/Quarantine_sound.ogg" mix="1" mode="stream"  group="QuarantineGroup"/>
+    <sample id="quarantine_song" path="sounds/Quarantine_song.ogg" mix="1" mode="stream"/>
+    <sample id="quarantine_theme" path="sounds/Quarantine_theme.ogg" mix="1" mode="stream"  group="QuarantineGroup"/>
     <sample id="quarantine_intro" path="sounds/Quarantine_intro.ogg" mix="1" mode="stream+cache" group="QuarantineGroup"/>
   </Sounds>
 

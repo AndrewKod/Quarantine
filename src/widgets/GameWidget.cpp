@@ -54,7 +54,7 @@ void GameWidget::Init()
 
 	//Get settings defined in input.txt
 	this->gameTime = 0.f;
-	this->maskedAdditionalTime = 3.f;
+	this->maskedAdditionalTime = 2.f;
 	this->sporeAdditionalTime = 0.5f;
 	this->gameSpeed = 0;	
 	this->speedCoef = 250;
@@ -108,7 +108,14 @@ void GameWidget::Init()
 	this->bInfected = false;
 	this->bAtacking = false;
 
-	int sample = MM::manager.PlaySample("quarantine");
+	//Fade quarantine_sound
+	MM::manager.FadeOutTrack(3.f);
+
+	//Play quarantine_song
+	int sampleId = MM::manager.PlayTrack("quarantine_song", true);	
+	float trackStart = 38.f / 119.f;
+	MM::manager.SetPos(sampleId, trackStart);
+	
 }
 
 void GameWidget::DeInit()

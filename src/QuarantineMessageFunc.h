@@ -148,7 +148,7 @@ public:
 			//pop MainLayer, OutdoorLayer, EndLayer
 			Core::mainScreen.popLayer();
 			Core::mainScreen.popLayer();
-			Core::mainScreen.popLayer();
+			Core::mainScreen.popLayer();			
 			
 			Message mess("EndLayer", "DeInit");				
 
