@@ -533,9 +533,11 @@ void GameWidget::CheckCollisions()
 			this->doorPos.y, this->doorPos.y + doorRect.Height());
 		Utilities::SqueezeRectangle(collideArea, 30.f);
 
-		this->CheckSporesAndVisitorCollision(collideArea);
+		if (!this->bMasked)
+			this->CheckSporesAndVisitorCollision(collideArea);
 
-		this->CheckMasksAndVisitorCollision(collideArea);
+		if(!this->bInfected)
+			this->CheckMasksAndVisitorCollision(collideArea);
 
 		//skip all spore collision tests if visitor atacked
 		return;
