@@ -7,12 +7,6 @@
     <ClCompile Include="..\..\src\stdafx.cpp">
       <Filter>Header Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\TestAppDelegate.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\TestWidget.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src\widgets\GameWidget.cpp">
       <Filter>Source Files\Widgets</Filter>
     </ClCompile>
@@ -53,12 +47,6 @@
   <ItemGroup>
     <ClInclude Include="..\..\src\stdafx.h">
       <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\TestAppDelegate.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\TestWidget.h">
-      <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\widgets\GameWidget.h">
       <Filter>Source Files\Widgets</Filter>
@@ -104,12 +92,6 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <Xml Include="..\..\bin\base_p\TestLayers.xml">
-      <Filter>XML</Filter>
-    </Xml>
-    <Xml Include="..\..\bin\base_p\TestResources.xml">
-      <Filter>XML</Filter>
-    </Xml>
     <Xml Include="..\..\bin\base_p\Layers.xml">
       <Filter>XML</Filter>
     </Xml>
@@ -149,9 +131,6 @@
     </ResourceCompile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\..\bin\base_p\test_start.lua">
-      <Filter>Scripts</Filter>
-    </None>
     <None Include="..\..\bin\base_p\start.lua">
       <Filter>Scripts</Filter>
     </None>

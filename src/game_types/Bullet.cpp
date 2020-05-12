@@ -32,8 +32,7 @@ Bullet::Bullet(int bulletId, Render::Texture * bulletTex, float speed,
 	this->trailEff = this->effCont.AddEffect("Iskra");
 	this->trailEff->Reset();
 	
-	CalculateTrajectory(startAngle, this->speed, startPoint);
-	//CalculateTrajectory(90.f, this->speed, startPoint);	
+	CalculateTrajectory(startAngle, this->speed, startPoint);	
 }
 
 Bullet::~Bullet()
@@ -170,7 +169,7 @@ void Bullet::CalculateTrajectory(float startAngle, float startSpeed, FPoint star
 float Bullet::CalculateY(float x, float startSpeed, float startAngleRad)
 {
 	//Gravity Acceleration
-	int g = 10;
+	const int g = 10;
 	return x * math::tan(startAngleRad) - (g*math::sqr(x) / (2 * math::sqr(startSpeed)*math::sqr(math::cos(startAngleRad))));
 }
 

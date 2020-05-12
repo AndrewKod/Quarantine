@@ -333,28 +333,13 @@ void GameWidget::AcceptMessage(const Message& message)
 	}
 	else if (publisher == "MainLayer" && data == "UpdateSettings")
 	{
-		this->UpdateSettings();
-
-		/*if (this->covidMonster != nullptr)
-			this->covidMonster->SetMaxSporeCount(this->maxSporeCount);
-
-		float sporeSpeedCoef = this->speedCoef / this->gameSpeed;
-		for (size_t sporeId = 0; sporeId < this->covidSpores.size(); sporeId++)
-		{
-			if (this->covidSpores[sporeId] == nullptr)
-				continue;
-			this->covidSpores[sporeId]->SetSpeedCoef(sporeSpeedCoef);
-		}*/
+		this->UpdateSettings();		
 	}
 }
 
 void GameWidget::KeyPressed(int keyCode)
 {
-	//
-	// keyCode - виртуальный код клавиши.
-	// В качестве значений для проверки нужно использовать константы VK_.
-	//
-
+	
 	if (keyCode == VK_A) {
 		// Реакция на нажатие кнопки A
 	}
@@ -368,7 +353,11 @@ void GameWidget::CharPressed(int unicodeChar)
 
 	if (unicodeChar == L'а') {
 		// Реакция на ввод символа 'а'
+		
+		//Globals.h
+#ifdef WITH_DEBUG
 		TryAddCovidSpore(0);
+#endif // WITH_DEBUG		
 	}
 }
 

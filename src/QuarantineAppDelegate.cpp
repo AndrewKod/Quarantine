@@ -115,7 +115,6 @@ void QuarantineAppDelegate::LoadResources()
 	if (settingsLayer != nullptr)
 		settingsLayer->messageFunc = this->messageFunc;
 
-	//Not Necessary
 	Layer* outdoorLayer = Core::guiManager.getLayer("OutdoorLayer");
 	if (outdoorLayer != nullptr)
 		outdoorLayer->messageFunc = this->messageFunc;

@@ -28,11 +28,7 @@ public:
 
 	void Update(float dt) override;
 
-	void ApplyDamage(int dmgPoints = 1) override;
-
-	/*void Destroy() override;
-
-	void Hit() override;*/
+	void ApplyDamage(int dmgPoints = 1) override;	
 
 	bool CheckBulletCollision(Bullet* bullet) override;
 
@@ -47,11 +43,7 @@ public:
 
 	void SetMaxSporeCount(int maxSporeCount) { this->maxSporeCount = maxSporeCount; }
 
-	void SetInvincible() { this->bInvincible = true; }
-
-	//Temp For Tests
-	//void SetInvincible() { this->bInvincible = false; }
-	//Temp For Tests
+	void SetInvincible() { this->bInvincible = true; }	
 
 	void AddSpores(int count = 1);
 	void SubtractSpores(int count = 1);

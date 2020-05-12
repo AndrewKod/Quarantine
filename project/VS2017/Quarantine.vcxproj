@@ -124,8 +124,6 @@
     <ClCompile Include="..\..\src\game_types\Target.cpp" />
     <ClCompile Include="..\..\src\Main.cpp" />
     <ClCompile Include="..\..\src\QuarantineAppDelegate.cpp" />
-    <ClCompile Include="..\..\src\TestAppDelegate.cpp" />
-    <ClCompile Include="..\..\src\TestWidget.cpp" />
     <ClCompile Include="..\..\src\stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
@@ -146,8 +144,6 @@
     <ClInclude Include="..\..\src\Globals.h" />
     <ClInclude Include="..\..\src\QuarantineAppDelegate.h" />
     <ClInclude Include="..\..\src\QuarantineMessageFunc.h" />
-    <ClInclude Include="..\..\src\TestAppDelegate.h" />
-    <ClInclude Include="..\..\src\TestWidget.h" />
     <ClInclude Include="..\..\src\stdafx.h" />
     <ClInclude Include="..\..\src\utilities\Utilities.h" />
     <ClInclude Include="..\..\src\widgets\BaseWidget.h" />
@@ -164,14 +160,9 @@
     <Xml Include="..\..\bin\base_p\Resources.xml">
       <SubType>Designer</SubType>
     </Xml>
-    <Xml Include="..\..\bin\base_p\TestLayers.xml">
-      <SubType>Designer</SubType>
-    </Xml>
-    <Xml Include="..\..\bin\base_p\TestResources.xml" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\bin\base_p\start.lua" />
-    <None Include="..\..\bin\base_p\test_start.lua" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="resource.rc" />
