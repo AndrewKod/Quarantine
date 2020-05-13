@@ -107,21 +107,18 @@ void GameWidget::Init()
 	this->bMasked = false;
 	this->bInfected = false;
 	this->bAtacking = false;
+		
+	MM::manager.StopAll();
 
-	//Fade quarantine_sound
-	MM::manager.FadeOutTrack(3.f);
-
-	//Play quarantine_song
-	int sampleId = MM::manager.PlayTrack("quarantine_song", true);	
 	float trackStart = 38.f / 119.f;
+	MM::manager.FadeInTrack("quarantine_song", 3.f, true);
+	int sampleId = MM::manager.GetTrackId();
 	MM::manager.SetPos(sampleId, trackStart);
 	
 }
 
 void GameWidget::DeInit()
-{
-	this->DeleteCovidMonster();
-	
+{	
 	for (size_t sporeId = 0; sporeId < this->covidSpores.size(); sporeId++)
 	{
 		if (this->covidSpores[sporeId] != nullptr)
@@ -291,6 +288,7 @@ void GameWidget::AcceptMessage(const Message& message)
 	}
 	else if (publisher == "EndLayer" && data == "DeInit")
 	{
+		this->DeleteCovidMonster();
 		this->DeInit();
 	}
 	else if (publisher == "OutdoorWidget" && data=="bDoorOpened")

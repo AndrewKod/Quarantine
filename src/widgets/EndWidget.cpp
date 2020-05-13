@@ -30,15 +30,10 @@ void EndWidget::Init()
 void EndWidget::DeInit()
 {
 	this->effCont.KillAllEffects();
-	this->effCont.Finish();		
+	this->effCont.Finish();
 
-	//fade quarantine_intro if defeated
-	if (!this->bVictory)
-		MM::manager.FadeOutTrack(3.f);
-	
-	//play quarantine_sound during start layers are active
-	int sampleId = MM::manager.PlayTrack("quarantine_theme", true);
-
+	MM::manager.StopAll();
+	MM::manager.FadeInTrack("quarantine_theme", 3.f, true);
 }
 
 void EndWidget::Draw()
@@ -113,14 +108,13 @@ void EndWidget::AcceptMessage(const Message& message)
 	if (publisher == "GameWidget" && data == "bVictory")
 	{
 		this->bVictory = message.getIntegerParam();
-		//Fade quarantine_song
-		MM::manager.FadeOutTrack(3.f);
-
-		//Play quarantine_intro if defeated
-		if(!this->bVictory)
-			this->sampleId = MM::manager.PlayTrack("quarantine_intro", true);
-
 		
+		//Play quarantine_intro if defeated
+		if (!this->bVictory)
+		{
+			MM::manager.StopAll();
+			MM::manager.FadeInTrack("quarantine_intro", 3.f, true);			
+		}
 	}
 	else if (publisher == "StartLayer" && data == "Init")
 	{

@@ -49,6 +49,8 @@ public:
 		int healthSegmentSpace, int maxHealth,
 		TimedSpline<FPoint>& trajectorySpline, float splineEndTime, float speedCoef);
 
+	~Target() { OnHit.Clear(); OnDestroy.Clear(); }
+
 	virtual void Draw();
 
 	virtual void Update(float dt);
