@@ -13,6 +13,7 @@ void StartWidget::Init()
 	this->sloganTex = Core::resourceManager.Get<Render::Texture>("quarantine_slogan");	
 
 	MM::manager.FadeInTrack("quarantine_theme", 3.f, true);
+	MM::manager.SetMusicVolume(7.f);
 }
 
 void StartWidget::Draw()

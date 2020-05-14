@@ -113,8 +113,7 @@ void GameWidget::Init()
 	float trackStart = 38.f / 119.f;
 	MM::manager.FadeInTrack("quarantine_song", 3.f, true);
 	int sampleId = MM::manager.GetTrackId();
-	MM::manager.SetPos(sampleId, trackStart);
-	
+	MM::manager.SetPos(sampleId, trackStart);	
 }
 
 void GameWidget::DeInit()
